@@ -77,6 +77,9 @@ create or replace type body util.logtype as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- log info level messages
+  ------------------------------------------------------------------------------
   member procedure info(message varchar2 default null, statement varchar2 default null)
   is
     pragma autonomous_transaction;
@@ -84,6 +87,9 @@ create or replace type body util.logtype as
     self.log(message, statement,'INFO');
   end;
 
+  ------------------------------------------------------------------------------
+  -- log success level messages
+  ------------------------------------------------------------------------------
   member procedure success(message varchar2 default null, statement varchar2 default null)
   is
     pragma autonomous_transaction;
@@ -91,6 +97,9 @@ create or replace type body util.logtype as
     log(message, statement, 'SUCCESS');
   end;
 
+  ------------------------------------------------------------------------------
+  -- log error level messages
+  ------------------------------------------------------------------------------
   member procedure error(message varchar2 default null, statement varchar2 default null)
   is
     pragma autonomous_transaction;
