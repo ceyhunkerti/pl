@@ -95,7 +95,32 @@ as
     when others then
       pl.logger.error(v_proc, SQLERRM, gv_sql);
       raise;
-   end;
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- check if table exists
+  ------------------------------------------------------------------------------
+  function table_exists(piv_owner in varchar2, piv_table in varchar2) return boolean
+  IS
+    v_proc  varchar2(1000) := gv_package || '.table_exists';
+    v_cnt   number := 0;
+  begin
+
+    gv_sql := '
+      select count(1)
+      from all_tables
+      where table_name = upper ('''||piv_table||''') and owner = upper ('''||piv_owner||''')
+    ';
+    execute immediate into v_cnt;
+    return case cnt when 0 then false else true end; 
+
+  exception
+    when others then
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+   END;
+
 
 
   ------------------------------------------------------------------------------
@@ -113,7 +138,7 @@ as
     when others then
       pl.logger.error(v_proc, SQLERRM, gv_sql);
       raise;
-   end;
+  end;
 
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
