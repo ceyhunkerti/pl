@@ -90,7 +90,7 @@ as
       
       gv_sql := 'alter session enable parallel dml';
       execute immediate v_dyntask;
-      pl.logger.success(v_proc, 'enabled parallel dml for current session', gv_sql);
+      pl.logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
   exception
     when others then
       pl.logger.error(v_proc, SQLERRM, gv_sql);
@@ -98,6 +98,22 @@ as
    end;
 
 
+  ------------------------------------------------------------------------------
+  -- disable parallel dml for the current session
+  ------------------------------------------------------------------------------
+  procedure disable_parallel_dml
+  is
+    v_proc varchar2(1000) := gv_package || '.enable_parallel_dml';
+  begin
+      
+      gv_sql := 'alter session disable parallel dml';
+      execute immediate v_dyntask;
+      pl.logger.success(v_proc, ' disabled parallel dml for current session', gv_sql);
+  exception
+    when others then
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+   end;
 
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
