@@ -80,6 +80,23 @@ as
       if pib_ignore_err == false then raise; end;
   end;
 
+  ------------------------------------------------------------------------------
+  -- enable parallel dml for the current session
+  ------------------------------------------------------------------------------
+  procedure enable_parallel_dml
+  is
+    v_proc varchar2(1000) := gv_package || '.enable_parallel_dml';
+  begin
+      
+      gv_sql := 'alter session enable parallel dml';
+      execute immediate v_dyntask;
+      pl.logger.success(v_proc, 'enabled parallel dml for current session', gv_sql);
+  exception
+    when others then
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+   end;
+
 
 
   ------------------------------------------------------------------------------

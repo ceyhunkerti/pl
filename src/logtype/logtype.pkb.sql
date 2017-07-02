@@ -28,10 +28,10 @@ create or replace type body util.logtype as
   ------------------------------------------------------------------------------
   -- initialize a logtype object
   ------------------------------------------------------------------------------
-  static function init(name varchar2 default 'anonymous', log_level varchar2 default 'INFO') return logtype
+  static function init(name varchar2 default 'anonymous') return logtype
   is
   begin
-    return logtype(name, log_level, sysdate, null, null, null);
+    return logtype(name, null, sysdate, null, null, null);
   end;
 
   ------------------------------------------------------------------------------
@@ -62,12 +62,15 @@ create or replace type body util.logtype as
   -- general log method
   ------------------------------------------------------------------------------
   member procedure log(
+    name      varchar2,
     message   varchar2 default null, 
     statement varchar2 default null, 
-    log_level varchar2 default 'INFO')
+    log_level varchar2 default 'INFO'
+  )
   is
     pragma autonomous_transaction;
   begin
+    self.name      := name; 
     self.message   := message;
     self.statement := statement;
     self.log_level := log_level;
@@ -79,32 +82,64 @@ create or replace type body util.logtype as
   ------------------------------------------------------------------------------
   -- log info level messages
   ------------------------------------------------------------------------------
-  member procedure info(message varchar2 default null, statement varchar2 default null)
+  member procedure info(message varchar2, statement varchar2  default null)
   is
     pragma autonomous_transaction;
   begin
-    self.log(message, statement,'INFO');
+    self.log(self.name, message, statement,'INFO');
   end;
+
+  ------------------------------------------------------------------------------
+  -- log info level messages, w/o initialization
+  ------------------------------------------------------------------------------
+  member procedure info(name varchar2, message varchar2, statement varchar2)
+  is
+    pragma autonomous_transaction;
+  begin
+    self.log(name, message, statement,'INFO');
+  end;
+
 
   ------------------------------------------------------------------------------
   -- log success level messages
   ------------------------------------------------------------------------------
-  member procedure success(message varchar2 default null, statement varchar2 default null)
+  member procedure success(message varchar2, statement varchar2  default null)
   is
     pragma autonomous_transaction;
   begin
-    log(message, statement, 'SUCCESS');
+    log(self.name, message, statement, 'SUCCESS');
+  end;
+
+  ------------------------------------------------------------------------------
+  -- log success level messages, w/o initialization
+  ------------------------------------------------------------------------------
+  member procedure success(name varchar2, message varchar2, statement varchar2)
+  is
+    pragma autonomous_transaction;
+  begin
+    log(name, message, statement, 'SUCCESS');
   end;
 
   ------------------------------------------------------------------------------
   -- log error level messages
   ------------------------------------------------------------------------------
-  member procedure error(message varchar2 default null, statement varchar2 default null)
+  member procedure error(message varchar2, statement varchar2 default null)
   is
     pragma autonomous_transaction;
   begin
-    log(message, statement,'ERROR');
+    log(self.name,message, statement,'ERROR');
   end;
+
+  ------------------------------------------------------------------------------
+  -- log error level messages, w/o initialization
+  ------------------------------------------------------------------------------
+  member procedure error(name varchar2, message varchar2, statement varchar2)
+  is
+    pragma autonomous_transaction;
+  begin
+    log(name, message, statement,'ERROR');
+  end;
+
 
   ------------------------------------------------------------------------------
   -- print current log to dbms output
