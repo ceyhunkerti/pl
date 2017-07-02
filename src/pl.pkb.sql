@@ -61,4 +61,23 @@ as
       raise;
   end;
 
+  ------------------------------------------------------------------------------
+  -- for those who struggels to remember dbms_output.putline! :) like me
+  ------------------------------------------------------------------------------
+  procedure printl(piv_message varchar2)
+  is
+  begin
+    dbms_output.put_line(msg)
+  end;
+
+  ------------------------------------------------------------------------------
+  -- for those who struggels to remember dbmsoutput.put! :) like me
+  ------------------------------------------------------------------------------
+  procedure print(piv_message varchar2)
+  is
+  begin
+    dbms_output.put(msg)
+  end;
+
+
 end;

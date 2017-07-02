@@ -76,7 +76,6 @@ create or replace type body util.logtype as
     commit;
   end;
 
-
   ------------------------------------------------------------------------------
   -- log info level messages
   ------------------------------------------------------------------------------
@@ -107,6 +106,9 @@ create or replace type body util.logtype as
     log(message, statement,'ERROR');
   end;
 
+  ------------------------------------------------------------------------------
+  -- print current log to dbms output
+  ------------------------------------------------------------------------------
   member procedure print
   is
   begin
