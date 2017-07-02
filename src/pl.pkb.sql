@@ -21,16 +21,27 @@ as
   -- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-
+  -- name of this package
   gv_package varchar2(30) := 'PL'; 
+  
+  -- dynamic task for execute immediate
   gv_sql long;
 
+  ------------------------------------------------------------------------------
+  -- return a string representation of date object.
+  -- this method is useful when you use dynamic sql with exec. immediate
+  -- and want to use a date object in your dynamic sql string.  
+  ------------------------------------------------------------------------------
   function date_string(pid_date date) return varchar2
   IS
   begin
     return 'to_date('''||to_char(pid_date, 'ddmmyyyy h24:mi:ss')|| ''',''ddmmyyyy h24:mi:ss'') ';
   end;
 
+  ------------------------------------------------------------------------------
+  -- truncate table given with schema name, and table name 
+  -- eg. pl.truncate_table('UTIL','LOGS')
+  ------------------------------------------------------------------------------
   procedure truncate_table(piv_owner varchar2, piv_table in varchar2)
   is
     v_proc varchar2(1000) := gv_package || 'truncate_table';
