@@ -1,5 +1,9 @@
 create or replace package body util.pl
 as
+
+  ------------------------------------------------------------------------------
+  -- License
+  ------------------------------------------------------------------------------
   -- BSD 2-Clause License
   -- Copyright (c) 2017, bluecolor All rights reserved.
   -- Redistribution and use in source and binary forms, with or without modification, are permitted 
@@ -19,7 +23,7 @@ as
   -- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
   -- STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
   -- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+  ------------------------------------------------------------------------------
 
   -- name of this package
   gv_package varchar2(30) := 'PL'; 
@@ -49,11 +53,11 @@ as
     pl.logger := logtype.init(v_proc);
     gv_sql := 'truncate table '|| piv_owner || '.' || piv_table;
     execute immediate gv_sql;
-    pl.logger.log(piv_owner || '.' || piv_table|| ' truncated', gv_sql);
+    pl.logger.success(piv_owner || '.' || piv_table|| ' truncated', gv_sql);
     
   exception 
     when others then
-      pl.logger.log(SQLERRM, gv_sql);
+      pl.logger.error(SQLERRM, gv_sql);
       raise;
   end;
 

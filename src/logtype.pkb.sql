@@ -1,5 +1,8 @@
 create or replace type body util.logtype as
 
+  ------------------------------------------------------------------------------
+  -- License
+  ------------------------------------------------------------------------------
   -- BSD 2-Clause License
   -- Copyright (c) 2017, bluecolor All rights reserved.
   -- Redistribution and use in source and binary forms, with or without modification, are permitted 
@@ -19,13 +22,21 @@ create or replace type body util.logtype as
   -- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
   -- STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
   -- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  ------------------------------------------------------------------------------
 
+
+  ------------------------------------------------------------------------------
+  -- initialize a logtype object
+  ------------------------------------------------------------------------------
   static function init(name varchar2 default 'anonymous', log_level varchar2 default 'INFO') return logtype
   is
   begin
     return logtype(name, log_level, sysdate, null, null, null);
   end;
 
+  ------------------------------------------------------------------------------
+  -- store log object on logtable
+  ------------------------------------------------------------------------------
   member procedure persist
   is
   begin
@@ -47,10 +58,13 @@ create or replace type body util.logtype as
     ); 
   end;
 
+  ------------------------------------------------------------------------------
+  -- general log method
+  ------------------------------------------------------------------------------
   member procedure log(
     message   varchar2 default null, 
     statement varchar2 default null, 
-    log_type  varchar2 default 'INFO')
+    log_level varchar2 default 'INFO')
   is
     pragma autonomous_transaction;
   begin
@@ -62,37 +76,38 @@ create or replace type body util.logtype as
     commit;
   end;
 
-  -- member procedure info(message varchar2 default null, statement varchar2 default null)
-  -- is
-  --   pragma autonomous_transaction;
-  -- begin
-  --   log(message, statement);
-  -- end;
 
-  -- member procedure success(message varchar2 default null, statement varchar2 default null)
-  -- is
-  --   pragma autonomous_transaction;
-  -- begin
-  --   log(message, statement,self.SUCCESS);
-  -- end;
+  member procedure info(message varchar2 default null, statement varchar2 default null)
+  is
+    pragma autonomous_transaction;
+  begin
+    self.log(message, statement,'INFO');
+  end;
 
-  -- member procedure error(message varchar2 default null, statement varchar2 default null)
-  -- is
-  --   pragma autonomous_transaction;
-  -- begin
-  --   log(message, statement,self.ERROR);
-  -- end;
+  member procedure success(message varchar2 default null, statement varchar2 default null)
+  is
+    pragma autonomous_transaction;
+  begin
+    log(message, statement, 'SUCCESS');
+  end;
 
-  -- member procedure print
-  -- is
-  -- begin
-  --   dbms_output.put_line('-- [Log: '||self.name||']');
-  --   dbms_output.put_line(self.log_type);
-  --   dbms_output.put_line(to_char(self.start_date,'yyyy.mm.dd h24:mi:ss') );
-  --   dbms_output.put_line(to_char(self.end_date,'yyyy.mm.dd h24:mi:ss') );
-  --   dbms_output.put_line(self.message);
-  --   dbms_output.put_line('-- [/Log]');
-  -- end;
+  member procedure error(message varchar2 default null, statement varchar2 default null)
+  is
+    pragma autonomous_transaction;
+  begin
+    log(message, statement,'ERROR');
+  end;
+
+  member procedure print
+  is
+  begin
+    dbms_output.put_line('-- [Log: '||self.name||']');
+    dbms_output.put_line(self.log_level);
+    dbms_output.put_line(to_char(self.start_date,'yyyy.mm.dd h24:mi:ss') );
+    dbms_output.put_line(to_char(self.end_date,'yyyy.mm.dd h24:mi:ss') );
+    dbms_output.put_line(self.message);
+    dbms_output.put_line('-- [/Log]');
+  end;
 
 
 

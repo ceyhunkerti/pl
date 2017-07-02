@@ -6,15 +6,19 @@ CREATE OR REPLACE TYPE util.logtype as object (
   end_date    date, 
   message     varchar2(4000),
   statement   varchar2(32000),   
-  -- initialize the log object with the name field
+  
+  
   static function init(name varchar2 default 'anonymous', log_level varchar2 default 'INFO') return logtype,
 
   member procedure persist,
+  member procedure info(message varchar2 default null, statement varchar2 default null),
+  member procedure success(message varchar2 default null, statement varchar2 default null),
+  member procedure error(message varchar2 default null, statement varchar2 default null),
 
   member procedure log(
     message   varchar2 default null, 
     statement varchar2 default null, 
-    log_type  varchar2 default 'INFO'
+    log_level varchar2 default 'INFO'
   )
 
 );
