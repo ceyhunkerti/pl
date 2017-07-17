@@ -5,7 +5,7 @@ as
   -- License
   ------------------------------------------------------------------------------
   -- BSD 2-Clause License
-  -- Copyright (c) 2017, bluecolor All rights reserved.
+  -- Copyright (c) 2017, bluecolor, All rights reserved.
   -- Redistribution and use in source and binary forms, with or without modification, are permitted 
   -- provided that the following conditions are met:
   -- 
@@ -31,15 +31,22 @@ as
   -- dynamic task for execute immediate
   gv_sql long;
 
+
   ------------------------------------------------------------------------------
   -- return a string representation of date object.
   -- this method is useful when you use dynamic sql with exec. immediate
   -- and want to use a date object in your dynamic sql string.  
   ------------------------------------------------------------------------------
   function date_string(pid_date date) return varchar2
-  IS
+  is
   begin
     return 'to_date('''||to_char(pid_date, 'ddmmyyyy h24:mi:ss')|| ''',''ddmmyyyy h24:mi:ss'') ';
+  end;
+
+  function escape_sq(piv_string varchar2) return varchar2
+  is
+  begin
+    return replace(piv_string, '''', '''''');
   end;
 
   ------------------------------------------------------------------------------
@@ -54,12 +61,12 @@ as
     gv_sql := 'truncate table '|| piv_owner || '.' || piv_table;
     execute immediate gv_sql;
     pl.logger.success(piv_owner || '.' || piv_table|| ' truncated', gv_sql);
-    
   exception 
     when others then
       pl.logger.error(SQLERRM, gv_sql);
       raise;
   end;
+
 
   ------------------------------------------------------------------------------
   -- drop table given with schema name, and table name 
@@ -77,8 +84,9 @@ as
   exception 
     when others then
       pl.logger.error(SQLERRM, gv_sql);
-      if pib_ignore_err == false then raise; end;
+      if pib_ignore_err = false then raise; end if;
   end;
+
 
   ------------------------------------------------------------------------------
   -- enable parallel dml for the current session
@@ -86,11 +94,10 @@ as
   procedure enable_parallel_dml
   is
     v_proc varchar2(1000) := gv_package || '.enable_parallel_dml';
-  begin
-      
-      gv_sql := 'alter session enable parallel dml';
-      execute immediate v_dyntask;
-      pl.logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
+  begin  
+    gv_sql := 'alter session enable parallel dml';
+    execute immediate gv_sql;
+    pl.logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
   exception
     when others then
       pl.logger.error(v_proc, SQLERRM, gv_sql);
@@ -99,12 +106,171 @@ as
 
 
   ------------------------------------------------------------------------------
+  -- truncates given partition, raises error if partition not found.
+  ------------------------------------------------------------------------------
+  procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+  is
+    v_proc varchar2(1000) := gv_package || '.truncate_partition';
+    partition_not_found exception;
+    pragma exception_init(partition_not_found, -20170);
+    v_cnt  number := 0;
+  begin
+    gv_sql := '
+      select count(1)
+      from all_tables
+      where 
+        table_name = upper('''||piv_table||''') and 
+        owner = upper('''||piv_owner||''')      and
+        partition_name = upper('''||piv_partition||''') 
+    ';
+    execute immediate gv_sql into v_cnt;
+
+    if v_cnt = 0 then
+      raise partition_not_found;
+    else 
+      gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' truncate partition '||piv_partition;
+      execute immediate gv_sql;
+      pl.logger.success(v_proc, ' partition '||piv_partition||' truncated', gv_sql);
+    end if;
+  
+  exception 
+    when partition_not_found then
+      pl.logger.error(v_proc, v_proc||' partition '||piv_partition||' not found!', gv_sql);
+      raise_application_error (
+        -20100,
+        v_proc||' partition '||piv_partition||' not found!'
+      );
+    when others then 
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+  end;
+  
+
+  ------------------------------------------------------------------------------
+  -- drops given partition
+  ------------------------------------------------------------------------------
+  procedure drop_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+  is
+    v_proc varchar2(1000) := gv_package || '.drop_partition';
+    v_cnt  number := 0;
+  begin
+    gv_sql := '
+      select count(1)
+      from all_tables
+      where 
+        table_name = upper('''||piv_table||''') and 
+        owner = upper('''||piv_owner||''')      and
+        partition_name = upper('''||piv_partition||''') 
+    ';
+    execute immediate gv_sql into v_cnt;
+
+    if v_cnt = 0 then
+      pl.logger.info(v_proc, ' partition '||piv_partition||' not found', gv_sql);
+    else 
+      gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' drop partition '||piv_partition;
+      execute immediate gv_sql;
+      pl.logger.success(v_proc, ' partition '||piv_partition||' dropped', gv_sql);
+    end if;
+  
+  exception 
+    when others then 
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+  end;
+  
+
+  procedure drop_partition_lt(piv_owner varchar2, piv_table varchar2,pid_date date)
+  is
+  begin
+    drop_partition(piv_owner, piv_table, pid_date,'<');
+  end;  
+
+  procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date)
+  is
+  begin
+    drop_partition(piv_owner, piv_table, pid_date,'<=');
+  end;  
+
+  procedure drop_partition_gt(piv_owner varchar2,piv_table varchar2,pid_date date)
+  is
+  begin
+    drop_partition(piv_owner, piv_table, pid_date,'>');
+  end;  
+
+  procedure drop_partition_gte(piv_owner varchar2, piv_table varchar2,pid_date date)
+  is
+  begin
+    drop_partition(piv_owner, piv_table, pid_date,'>=');
+  end;  
+
+  ------------------------------------------------------------------------------
+  -- drops all partitions that are <= piv_max_date
+  ------------------------------------------------------------------------------
+  procedure drop_partition(
+    piv_owner varchar2,piv_table varchar2, pid_date  date, piv_operator varchar2 default '<'
+  )
+  is
+    v_proc          varchar2(20)  := 'drop_partition';
+    v_col_name      varchar2(200) := '';
+    v_col_data_type varchar2(20)  := 'DATE';
+    v_cnt           number;
+    
+  begin
+    
+    
+
+    gv_sql :='
+      select 
+        c.column_name,
+        c.data_type
+      from 
+        ALL_TAB_COLS         c,
+        ALL_PART_KEY_COLUMNS p
+      where
+        p.owner       = c.owner             and
+        p.column_name = c.column_name       and
+        p.name = '''||upper(piv_table)||''' and
+        p.owner= '''||upper(piv_owner)||'''
+    ';
+
+    execute immediate gv_sql into v_col_name, v_col_data_type;
+
+    for c1 in (
+      select t.partition_name, t.high_value from all_tab_partitions t 
+      where 
+        upper(t.table_owner)= upper(piv_owner) and
+        upper(t.table_name) = upper(piv_table)  
+    ) loop
+
+      gv_sql := 'select count(1) from dual where 
+        ' || escape_sq(c1.high_value) || piv_operator || date_string(pid_date); 
+      execute immediate gv_sql into v_cnt;
+
+      if v_cnt = 1 then 
+        gv_sql := 'alter table '||piv_owner||'.'||piv_table||' drop partition '|| c1.partition_name; 
+        execute immediate gv_sql;
+        pl.logger.success(v_proc, 'op:'||piv_operator, gv_sql);
+      end if;
+
+    end loop;
+    
+  
+  exception 
+    when others then 
+      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      raise;
+  end;
+  
+
+
+
+  ------------------------------------------------------------------------------
   -- check if table exists
   ------------------------------------------------------------------------------
-  function table_exists(piv_owner in varchar2, piv_table in varchar2) return boolean
+  function table_exists(piv_owner varchar2, piv_table varchar2) return boolean
   IS
-    v_proc  varchar2(1000) := gv_package || '.table_exists';
-    v_cnt   number := 0;
+    v_proc varchar2(1000) := gv_package || '.table_exists';
+    v_cnt  number := 0;
   begin
 
     gv_sql := '
@@ -112,14 +278,22 @@ as
       from all_tables
       where table_name = upper ('''||piv_table||''') and owner = upper ('''||piv_owner||''')
     ';
-    execute immediate into v_cnt;
-    return case cnt when 0 then false else true end; 
+    execute immediate gv_sql into v_cnt;
+    return case v_cnt when 0 then false else true end; 
 
   exception
     when others then
       pl.logger.error(v_proc, SQLERRM, gv_sql);
       raise;
-   END;
+  end;
+
+
+  procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date)
+  is
+  begin
+    
+    null;
+  end;
 
 
 
@@ -132,7 +306,7 @@ as
   begin
       
       gv_sql := 'alter session disable parallel dml';
-      execute immediate v_dyntask;
+      execute immediate gv_sql;
       pl.logger.success(v_proc, ' disabled parallel dml for current session', gv_sql);
   exception
     when others then
@@ -146,7 +320,7 @@ as
   procedure printl(piv_message varchar2)
   is
   begin
-    dbms_output.put_line(msg)
+    dbms_output.put_line(piv_message);
   end;
 
   ------------------------------------------------------------------------------
@@ -155,7 +329,7 @@ as
   procedure print(piv_message varchar2)
   is
   begin
-    dbms_output.put(msg)
+    dbms_output.put(piv_message);
   end;
 
 
