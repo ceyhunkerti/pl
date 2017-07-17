@@ -40,7 +40,7 @@ as
   function date_string(pid_date date) return varchar2
   is
   begin
-    return 'to_date('''||to_char(pid_date, 'ddmmyyyy h24:mi:ss')|| ''',''ddmmyyyy h24:mi:ss'') ';
+    return 'to_date('''||to_char(pid_date, 'ddmmyyyy hh24:mi:ss')|| ''',''ddmmyyyy hh24:mi:ss'')';
   end;
 
   function escape_sq(piv_string varchar2) return varchar2
@@ -216,8 +216,8 @@ as
     v_cnt           number;
     
   begin
-    
-    
+
+    pl.logger := util.logtype.init(v_proc);
 
     gv_sql :='
       select 
@@ -232,7 +232,6 @@ as
         p.name = '''||upper(piv_table)||''' and
         p.owner= '''||upper(piv_owner)||'''
     ';
-
     execute immediate gv_sql into v_col_name, v_col_data_type;
 
     for c1 in (
@@ -243,7 +242,11 @@ as
     ) loop
 
       gv_sql := 'select count(1) from dual where 
-        ' || escape_sq(c1.high_value) || piv_operator || date_string(pid_date); 
+        ' || c1.high_value || piv_operator || 
+        case v_col_data_type 
+          when 'DATE' then date_string(pid_date) 
+          else to_char(pid_date,'yyyymmdd') 
+        end; 
       execute immediate gv_sql into v_cnt;
 
       if v_cnt = 1 then 

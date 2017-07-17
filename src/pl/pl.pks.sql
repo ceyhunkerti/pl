@@ -1,4 +1,4 @@
-create or replace package util.pl
+create or replace package util.pl authid current_user
 as
   logger  logtype;
   

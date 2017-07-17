@@ -28,6 +28,7 @@ CREATE OR REPLACE TYPE util.logtype as object (
     statement varchar2 default null, 
     log_level varchar2 default 'INFO'
   ),
+  
 
   member procedure print
 
