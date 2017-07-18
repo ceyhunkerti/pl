@@ -40,6 +40,8 @@ as
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
 
+
+
   function find_max_partition(piv_owner varchar2, piv_table varchar2) return long
   is
     v_part long;
@@ -374,13 +376,40 @@ as
   end;
 
 
+  function find_partition_range_type(piv_owner varchar2, piv_table varchar2) return char
+  is
+    v_part_name varchar2(100);
+  begin
+    gv_sql := '
+      select partition_name from all_tab_partitions 
+      where 
+        owner = '''||upper(piv_owner) ||''' and
+        table_name = '''||upper(piv_owner) ||''' and
+        rownum = 1
+    ';
+    execute immediate gv_sql into v_part_name;
+    return find_partition_range_type(v_part_name);   
+  end;
+
+  function find_partition_range_type(piv_part_name varchar2) return char 
+  is
+    v_part_prefix varchar2(10) := '';
+    v_part_suffix varchar2(10) := '';
+    v_range_type  char(1):= 'd';
+  begin
+    v_part_prefix := find_partition_prefix(v_part_name);
+    v_part_suffix := ltrim(v_part_name, v_part_prefix);
+    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end;
+    return v_range_type;
+  end;
+
+
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date)
   is
     v_part long := find_max_partition(piv_owner, piv_table);
     v_part_name   varchar2(50);
     v_high_value  long;
     v_part_prefix varchar2(10) := '';
-    v_part_suffix varchar2(10) := '';
     v_range_type  char(1):= 'd';
     v_partiotion_col_type varchar2(20) := find_partiotion_col_type(piv_owner, piv_table);  
     v_max_date    date;
@@ -391,9 +420,8 @@ as
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
-    v_part_suffix := ltrim(v_part_name, v_part_prefix);
     v_high_value  := ltrim(v_part, v_part_name||':');
-    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end; 
+    v_range_type  := find_partition_range_type(v_part_name); 
 
     if v_partiotion_col_type = 'DATE' then
       gv_sql := 'select '||v_high_value||' from dual';   
@@ -472,6 +500,9 @@ as
   is
   begin
     gv_proc := 'window_partitions';
+
+
+
 
     null;
 --    when table_not_partitioned then
