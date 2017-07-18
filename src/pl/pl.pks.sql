@@ -10,7 +10,7 @@ as
   
   procedure drop_table(piv_owner varchar2, piv_table varchar2, pib_ignore_err boolean default true);
   
-  function  table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
+  function table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
   
 
   -- partition management  

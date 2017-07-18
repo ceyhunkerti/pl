@@ -349,7 +349,7 @@ as
     v_high_date date;
   begin
 
-    v_high_date := to_date(v_high_value);
+    v_high_date := to_date(piv_prev_high_val);
 
     if piv_range_type = 'd' then 
       v_high_date := v_high_date + 1;
@@ -357,12 +357,13 @@ as
       v_high_date := add_months(v_high_date,1);
     end if;  
 
-    if piv_col_data_type = 'DATE' return date_string(v_high_date); end if;
+    if piv_col_data_type = 'DATE' then return date_string(v_high_date); end if;
 
     return to_char(v_high_date, 
       case piv_range_type 
         when 'd' then 'yyyymmdd' 
-        else 'yyyymm' 
+        when 'm' then 'yyyymm'
+        -- :todo implement others 
       end
     );    
 
@@ -437,14 +438,12 @@ as
     else 
       v_part_name := v_part_prefix || to_char(v_date, 'yyyymmdd');
     end if;
-
-    v_part_name := 'P'||to_char(pid_date,case lower(piv_type) when 'd' then 'yyyymmdd' else 'yyyymm' end);
-
+    
     gv_sql :=  'alter table '||piv_owner||'.'||piv_table||' add partition '|| v_part_name ||
       ' values less than (
-          '||find_high_value(v_partiotion_col_type varchar2, v_range_type v_high_value)||'
+          '||find_high_value(v_partiotion_col_type , v_range_type, v_high_value)||'
         )';
-    ;
+    
     execute immediate gv_sql;
     pl.logger.success('partition '||v_part_name ||' added to '||piv_owner||'.'||piv_table, gv_sql);
 
