@@ -350,7 +350,7 @@ as
     return v_date;
   end;
 
-  function find_high_value(piv_col_data_type varchar2, piv_range_type char, piv_prev_high_val long) return long
+  function find_next_high_value(piv_col_data_type varchar2, piv_range_type char, piv_prev_high_val long) return long
   is
     v_high_date date;
   begin
@@ -481,7 +481,7 @@ as
     
     gv_sql :=  'alter table '||piv_owner||'.'||piv_table||' add partition '|| v_part_name ||
       ' values less than (
-          '||find_high_value(v_partiotion_col_type , v_range_type, v_high_value)||'
+          '||find_next_high_value(v_partiotion_col_type , v_range_type, v_high_value)||'
         )';
     
     printl(gv_sql);
@@ -495,19 +495,14 @@ as
 --    raise;
   end;
 
-
+  
   procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number)
   is
+    v_range_type := find_partition_range_type(piv_owner, piv_table);
   begin
-    gv_proc := 'window_partitions';
-
-
-
-
-    null;
---    when table_not_partitioned then
---      pl.logger.error(gv_proc, 'Table '||piv_table||' is not partitioned', null);
---      raise_application_error(-20171,'Table '||piv_table||' is not partitioned');
+    gv_proc := 'pl.window_partitions';
+    add_partitions(piv_owner,piv_table,pid_date);
+    drop_partition_lt(piv_owner,piv_table, pid_date-pin_window_size);
   end;  
 
 
