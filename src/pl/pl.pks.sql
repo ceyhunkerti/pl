@@ -1,6 +1,6 @@
 create or replace package util.pl authid current_user
 as
-  logger  logtype;
+  logger  logtype := util.logtype.init('anonymous');;
   
   function is_number(piv_str varchar2) return boolean;
   

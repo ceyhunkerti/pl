@@ -16,3 +16,14 @@ PARTITION BY RANGE (c1)
    PARTITION p20170715 VALUES LESS THAN (TO_DATE('2017-07-16', 'YYYY-MM-DD')),
    PARTITION p20170716 VALUES LESS THAN (TO_DATE('2018-07-17', 'YYYY-MM-DD'))
   );
+
+select * from all_tab_partitions
+where table_name = 'T1'
+
+
+begin
+--if util.pl.is_number('1') = true then util.pl.printl(1);else util.pl.printl(2); end if;
+  -- util.pl.add_partitions('DDBWH','t1', sysdate+5);
+  util.pl.drop_partition_gt('DDBWH','t1', sysdate);  
+    
+end;

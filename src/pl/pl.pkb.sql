@@ -87,7 +87,7 @@ as
   function is_number(piv_str varchar2) return boolean 
   is
   begin
-    return case length(trim(translate(piv_str, ' +-.0123456789', ' '))) when 0 then true else false end;
+    return case nvl(length(trim(translate(piv_str, ' +-.0123456789', ' '))),0) when 0 then true else false end;
   end;
 
   ------------------------------------------------------------------------------
@@ -287,7 +287,7 @@ as
       gv_sql := 'select count(1) from dual where 
         ' || c1.high_value || piv_operator || 
         case v_col_data_type 
-          when 'DATE' then date_string(pid_date) 
+          when 'DATE' then date_string(trunc(pid_date)) 
           else to_char(pid_date,'yyyymmdd') 
         end; 
       execute immediate gv_sql into v_cnt;
@@ -314,16 +314,20 @@ as
     v_part_prefix varchar2(10) := '';
   begin
     
+    printl('v_part_name: ' || piv_part_name);    
+  
     for i in 1 .. length(piv_part_name) loop
       v_chr := substr(piv_part_name,i,1);
       if(is_number(v_chr)) then
         exit;
       else 
-        v_part_prefix := v_part_prefix + v_chr;
+        v_part_prefix := v_part_prefix || v_chr;
       end if;
     end loop;
+    
+    printl('part prefix: ' || v_part_prefix);    
 
-    return v_part_prefix;
+    return trim(v_part_prefix);
   end;
 
   function to_date(piv_str long) return date
@@ -381,7 +385,11 @@ as
     v_partiotion_col_type varchar2(20) := find_partiotion_col_type(piv_owner, piv_table);  
     v_max_date    date;
   begin
-    v_part_name   := substr(v_part, 1, instr(v_part, ':'));
+    
+    gv_proc   := 'pl.add_partitions'; 
+    pl.logger := util.logtype.init(gv_proc);
+    
+    v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
     v_high_value  := ltrim(v_part, v_part_name||':');
@@ -396,15 +404,19 @@ as
     end if;
 
     execute immediate gv_sql into v_max_date;
+    
+    printl(gv_sql);
+    printl(to_char(pid_date,'yyyyymmdd'));
+    printl(to_char(v_max_date,'yyyyymmdd'));
 
     for i in 1 .. pid_date-v_max_date loop
       add_partition(piv_owner, piv_table, v_max_date+i);
     end loop; 
 
-  exception 
-  when others then 
-    pl.logger.error(SQLERRM, gv_sql);
-    raise;
+--  exception 
+--  when others then 
+--    pl.logger.error(SQLERRM, gv_sql);
+--    raise;
   end;
 
 
@@ -413,7 +425,7 @@ as
     v_high_value long;
     v_part_name  varchar2(50);
     v_partiotion_col_type varchar2(20);
-    v_last_part   varchar2(40);
+    v_last_part   long;
     v_part_prefix varchar2(20);
     v_part_suffix varchar2(10);
     v_range_type  char(1):= 'd';
@@ -425,7 +437,7 @@ as
 
     v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
     v_last_part   := find_max_partition(piv_owner, piv_table);
-    v_part_name   := substr(v_last_part,1,instr(v_last_part,':'));
+    v_part_name   := substr(v_last_part,1,instr(v_last_part,':')-1);
     v_high_value  := ltrim(v_last_part, v_part_name||':');
     v_part_prefix := find_partition_prefix(v_part_name);
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
@@ -444,13 +456,15 @@ as
           '||find_high_value(v_partiotion_col_type , v_range_type, v_high_value)||'
         )';
     
+    printl(gv_sql);
     execute immediate gv_sql;
+    
     pl.logger.success('partition '||v_part_name ||' added to '||piv_owner||'.'||piv_table, gv_sql);
 
-  exception 
-  when others then 
-    pl.logger.error(SQLERRM, gv_sql);
-    raise;
+--  exception 
+--  when others then 
+--    pl.logger.error(SQLERRM, gv_sql);
+--    raise;
   end;
 
 
