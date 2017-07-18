@@ -13,13 +13,8 @@ CREATE OR REPLACE TYPE util.logtype as object (
   member procedure persist,
 
   member procedure info(message varchar2, statement varchar2 default null),
-  member procedure info(name varchar2, message varchar2, statement varchar2),
-  
   member procedure success(message varchar2, statement varchar2 default null),
-  member procedure success(name varchar2, message varchar2, statement varchar2),
-  
   member procedure error(message varchar2, statement varchar2 default null),
-  member procedure error(name varchar2 ,message varchar2, statement varchar2),
   
 
   member procedure log(

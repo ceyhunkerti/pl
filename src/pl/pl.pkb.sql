@@ -29,8 +29,66 @@ as
   gv_package varchar2(30) := 'PL'; 
   
   -- dynamic task for execute immediate
-  gv_sql long;
+  gv_sql  long;
+  gv_proc varchar2(128);
 
+
+  -- exceptions
+  partition_not_found   exception;
+  table_not_partitioned exception;
+
+  pragma exception_init(partition_not_found,   -20170);
+  pragma exception_init(table_not_partitioned, -20171);
+
+  function find_max_partition(piv_owner varchar2, piv_table varchar2) return long
+  is
+    v_part long;
+    v_partition_name varchar2(20);
+    v_high_value varchar2(4000);
+  begin
+
+    select partition_name, high_value into v_partition_name, v_high_value 
+    from
+      (
+        select 
+          partition_name,
+          high_value,
+          row_number() over(partition by table_owner, table_name order by partition_position desc) rank_id 
+        from all_tab_partitions 
+        where table_owner = upper(piv_owner) and table_name = upper(piv_table)
+      )
+    where rank_id = 1;
+
+    return v_partition_name||':'||v_high_value;
+  end;  
+  
+  function find_partiotion_col_type(piv_owner varchar2, piv_table varchar2) return varchar2
+  is
+    v_col_data_type varchar2(20)  := 'DATE';
+  begin
+    gv_sql :='
+      select 
+        c.data_type
+      from 
+        ALL_TAB_COLS         c,
+        ALL_PART_KEY_COLUMNS p
+      where
+        p.owner       = c.owner             and
+        p.column_name = c.column_name       and
+        p.name = '''||upper(piv_table)||''' and
+        p.owner= '''||upper(piv_owner)||'''
+    ';
+    execute immediate gv_sql into v_col_data_type;
+    return v_col_data_type;
+  end;
+
+
+
+  function is_number(piv_str varchar2) return boolean 
+  is
+  begin
+    return case length(trim(translate(piv_str, ' +-.0123456789', ' '))) when 0 then true else false end;
+  end;
 
   ------------------------------------------------------------------------------
   -- return a string representation of date object.
@@ -111,8 +169,6 @@ as
   procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
   is
     v_proc varchar2(1000) := gv_package || '.truncate_partition';
-    partition_not_found exception;
-    pragma exception_init(partition_not_found, -20170);
     v_cnt  number := 0;
   begin
     gv_sql := '
@@ -137,7 +193,7 @@ as
     when partition_not_found then
       pl.logger.error(v_proc, v_proc||' partition '||piv_partition||' not found!', gv_sql);
       raise_application_error (
-        -20100,
+        -20170,
         v_proc||' partition '||piv_partition||' not found!'
       );
     when others then 
@@ -207,7 +263,7 @@ as
   -- drops all partitions that are <= piv_max_date
   ------------------------------------------------------------------------------
   procedure drop_partition(
-    piv_owner varchar2,piv_table varchar2, pid_date  date, piv_operator varchar2 default '<'
+    piv_owner varchar2,piv_table varchar2, pid_date date, piv_operator varchar2 default '<'
   )
   is
     v_proc          varchar2(20)  := 'drop_partition';
@@ -219,20 +275,7 @@ as
 
     pl.logger := util.logtype.init(v_proc);
 
-    gv_sql :='
-      select 
-        c.column_name,
-        c.data_type
-      from 
-        ALL_TAB_COLS         c,
-        ALL_PART_KEY_COLUMNS p
-      where
-        p.owner       = c.owner             and
-        p.column_name = c.column_name       and
-        p.name = '''||upper(piv_table)||''' and
-        p.owner= '''||upper(piv_owner)||'''
-    ';
-    execute immediate gv_sql into v_col_name, v_col_data_type;
+    v_col_data_type := find_partiotion_col_type(piv_owner, piv_table);
 
     for c1 in (
       select t.partition_name, t.high_value from all_tab_partitions t 
@@ -252,7 +295,7 @@ as
       if v_cnt = 1 then 
         gv_sql := 'alter table '||piv_owner||'.'||piv_table||' drop partition '|| c1.partition_name; 
         execute immediate gv_sql;
-        pl.logger.success(v_proc, 'op:'||piv_operator, gv_sql);
+        pl.logger.success('op:'||piv_operator, gv_sql);
       end if;
 
     end loop;
@@ -263,7 +306,165 @@ as
       pl.logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
+
+
+  function find_partition_prefix(piv_part_name varchar2) return varchar2
+  is
+    v_chr char(2);
+    v_part_prefix varchar2(10) := '';
+  begin
+    
+    for i in 1 .. length(piv_part_name) loop
+      v_chr := substr(piv_part_name,i,1);
+      if(is_number(v_chr)) then
+        exit;
+      else 
+        v_part_prefix := v_part_prefix + v_chr;
+      end if;
+    end loop;
+
+    return v_part_prefix;
+  end;
+
+  function to_date(piv_str long) return date
+  is
+    v_col   varchar2(1000);
+    v_date  date;
+  begin
+    
+    v_col := case length(piv_str) 
+      when 4 then 'to_date('''||piv_str||''',''yyyy'')'   
+      when 6 then 'to_date('''||piv_str||''',''yyyymm'')'
+      when 8 then 'to_date('''||piv_str||''',''yyyymmdd'')'
+      else piv_str 
+    end;
+
+    gv_sql := 'select '||v_col||' from dual';
+    execute immediate gv_sql into v_date; 
+    return v_date;
+  end;
+
+  function find_high_value(piv_col_data_type varchar2, piv_range_type char, piv_prev_high_val long) return long
+  is
+    v_high_date date;
+  begin
+
+    v_high_date := to_date(v_high_value);
+
+    if piv_range_type = 'd' then 
+      v_high_date := v_high_date + 1;
+    else
+      v_high_date := add_months(v_high_date,1);
+    end if;  
+
+    if piv_col_data_type = 'DATE' return date_string(v_high_date); end if;
+
+    return to_char(v_high_date, 
+      case piv_range_type 
+        when 'd' then 'yyyymmdd' 
+        else 'yyyymm' 
+      end
+    );    
+
+  end;
+
+
+  procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date)
+  is
+    v_part long := find_max_partition(piv_owner, piv_table);
+    v_part_name   varchar2(50);
+    v_high_value  long;
+    v_part_prefix varchar2(10) := '';
+    v_part_suffix varchar2(10) := '';
+    v_range_type  char(1):= 'd';
+    v_partiotion_col_type varchar2(20) := find_partiotion_col_type(piv_owner, piv_table);  
+    v_max_date    date;
+  begin
+    v_part_name   := substr(v_part, 1, instr(v_part, ':'));
+    v_part_prefix := find_partition_prefix(v_part_name);
+    v_part_suffix := ltrim(v_part_name, v_part_prefix);
+    v_high_value  := ltrim(v_part, v_part_name||':');
+    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end; 
+
+    if v_partiotion_col_type = 'DATE' then
+      gv_sql := 'select '||v_high_value||' from dual';   
+    elsif v_range_type = 'm' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymm'') from dual';
+    elsif v_range_type = 'd' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymmdd'') from dual';    
+    end if;
+
+    execute immediate gv_sql into v_max_date;
+
+    for i in 1 .. pid_date-v_max_date loop
+      add_partition(piv_owner, piv_table, v_max_date+i);
+    end loop; 
+
+  exception 
+  when others then 
+    pl.logger.error(SQLERRM, gv_sql);
+    raise;
+  end;
+
+
+  procedure add_partition(piv_owner varchar2,piv_table varchar2, pid_date date)
+  is
+    v_high_value long;
+    v_part_name  varchar2(50);
+    v_partiotion_col_type varchar2(20);
+    v_last_part   varchar2(40);
+    v_part_prefix varchar2(20);
+    v_part_suffix varchar2(10);
+    v_range_type  char(1):= 'd';
+    v_date date;
+  begin
   
+    gv_proc := 'add_partition';
+    pl.logger := util.logtype.init(gv_proc);
+
+    v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
+    v_last_part   := find_max_partition(piv_owner, piv_table);
+    v_part_name   := substr(v_last_part,1,instr(v_last_part,':'));
+    v_high_value  := ltrim(v_last_part, v_part_name||':');
+    v_part_prefix := find_partition_prefix(v_part_name);
+    v_part_suffix := ltrim(v_part_name, v_part_prefix);
+    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end; 
+
+    v_date := to_date(v_high_value);
+
+    if v_range_type = 'm' then
+      v_part_name := v_part_prefix || to_char(v_date, 'yyyymm');
+    else 
+      v_part_name := v_part_prefix || to_char(v_date, 'yyyymmdd');
+    end if;
+
+    v_part_name := 'P'||to_char(pid_date,case lower(piv_type) when 'd' then 'yyyymmdd' else 'yyyymm' end);
+
+    gv_sql :=  'alter table '||piv_owner||'.'||piv_table||' add partition '|| v_part_name ||
+      ' values less than (
+          '||find_high_value(v_partiotion_col_type varchar2, v_range_type v_high_value)||'
+        )';
+    ;
+    execute immediate gv_sql;
+    pl.logger.success('partition '||v_part_name ||' added to '||piv_owner||'.'||piv_table, gv_sql);
+
+  exception 
+  when others then 
+    pl.logger.error(SQLERRM, gv_sql);
+    raise;
+  end;
+
+
+  procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number)
+  is
+  begin
+    gv_proc := 'window_partitions';
+
+    null;
+--    when table_not_partitioned then
+--      pl.logger.error(gv_proc, 'Table '||piv_table||' is not partitioned', null);
+--      raise_application_error(-20171,'Table '||piv_table||' is not partitioned');
+  end;  
 
 
 
@@ -289,15 +490,6 @@ as
       pl.logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
-
-
-  procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date)
-  is
-  begin
-    
-    null;
-  end;
-
 
 
   ------------------------------------------------------------------------------

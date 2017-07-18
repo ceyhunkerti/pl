@@ -89,16 +89,6 @@ create or replace type body util.logtype as
     self.log(self.name, message, statement,'INFO');
   end;
 
-  ------------------------------------------------------------------------------
-  -- log info level messages, w/o initialization
-  ------------------------------------------------------------------------------
-  member procedure info(name varchar2, message varchar2, statement varchar2)
-  is
-    pragma autonomous_transaction;
-  begin
-    self.log(name, message, statement,'INFO');
-  end;
-
 
   ------------------------------------------------------------------------------
   -- log success level messages
@@ -110,15 +100,6 @@ create or replace type body util.logtype as
     log(self.name, message, statement, 'SUCCESS');
   end;
 
-  ------------------------------------------------------------------------------
-  -- log success level messages, w/o initialization
-  ------------------------------------------------------------------------------
-  member procedure success(name varchar2, message varchar2, statement varchar2)
-  is
-    pragma autonomous_transaction;
-  begin
-    log(name, message, statement, 'SUCCESS');
-  end;
 
   ------------------------------------------------------------------------------
   -- log error level messages
@@ -130,15 +111,6 @@ create or replace type body util.logtype as
     log(self.name,message, statement,'ERROR');
   end;
 
-  ------------------------------------------------------------------------------
-  -- log error level messages, w/o initialization
-  ------------------------------------------------------------------------------
-  member procedure error(name varchar2, message varchar2, statement varchar2)
-  is
-    pragma autonomous_transaction;
-  begin
-    log(name, message, statement,'ERROR');
-  end;
 
 
   ------------------------------------------------------------------------------
