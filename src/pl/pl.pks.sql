@@ -1,9 +1,11 @@
 create or replace package util.pl authid current_user
 as
-  logger  logtype := util.logtype.init('anonymous');;
+  logger  logtype := util.logtype.init('anonymous');
   
   function is_number(piv_str varchar2) return boolean;
-  
+  function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table;
+
+
   function date_string(pid_date date) return varchar2;
   
   procedure truncate_table(piv_owner varchar2, piv_table varchar2);

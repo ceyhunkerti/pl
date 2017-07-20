@@ -41,6 +41,28 @@ as
   pragma exception_init(table_not_partitioned, -20171);
 
 
+  function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table
+  is
+    i number := 0;
+    v_str varchar2(4000) := piv_str;
+    v_res dbms_sql.varchar2_table;
+  begin
+    loop
+      i := i + 1;
+      v_str := ltrim(v_str, piv_split);
+      if v_str is not null and instr(v_str,piv_split) > 0 then
+        v_res(i) := substr(v_str,1,instr(v_str,piv_split)-1);
+        v_str := ltrim(v_str, v_res(i));
+      else
+        if  length(v_str) > 0 then
+          v_res(i) := v_str;
+        end if;
+        exit;
+      end if;
+    end loop;
+
+    return v_res;
+  end;
 
   function find_max_partition(piv_owner varchar2, piv_table varchar2) return long
   is
@@ -63,6 +85,7 @@ as
 
     return v_partition_name||':'||v_high_value;
   end;  
+
   
   function find_partiotion_col_type(piv_owner varchar2, piv_table varchar2) return varchar2
   is
@@ -77,6 +100,7 @@ as
       where
         p.owner       = c.owner             and
         p.column_name = c.column_name       and
+        c.table_name = '''||upper(piv_table)||''' and
         p.name = '''||upper(piv_table)||''' and
         p.owner= '''||upper(piv_owner)||'''
     ';
@@ -117,13 +141,13 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.truncate_table';
   begin
-    pl.logger := logtype.init(v_proc);
+    logger := logtype.init(v_proc);
     gv_sql := 'truncate table '|| piv_owner || '.' || piv_table;
     execute immediate gv_sql;
-    pl.logger.success(piv_owner || '.' || piv_table|| ' truncated', gv_sql);
+    logger.success(piv_owner || '.' || piv_table|| ' truncated', gv_sql);
   exception 
     when others then
-      pl.logger.error(SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       raise;
   end;
 
@@ -136,14 +160,14 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.drop_table';
   begin
-    pl.logger := logtype.init(v_proc);
+    logger := logtype.init(v_proc);
     gv_sql := 'drop table '|| piv_owner || '.' || piv_table;
     execute immediate gv_sql;
-    pl.logger.success(piv_owner || '.' || piv_table|| ' dropped', gv_sql);
+    logger.success(piv_owner || '.' || piv_table|| ' dropped', gv_sql);
     
   exception 
     when others then
-      pl.logger.error(SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       if pib_ignore_err = false then raise; end if;
   end;
 
@@ -157,10 +181,10 @@ as
   begin  
     gv_sql := 'alter session enable parallel dml';
     execute immediate gv_sql;
-    pl.logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
+    logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
   exception
     when others then
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
 
@@ -188,18 +212,18 @@ as
     else 
       gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' truncate partition '||piv_partition;
       execute immediate gv_sql;
-      pl.logger.success(v_proc, ' partition '||piv_partition||' truncated', gv_sql);
+      logger.success(v_proc, ' partition '||piv_partition||' truncated', gv_sql);
     end if;
   
   exception 
     when partition_not_found then
-      pl.logger.error(v_proc, v_proc||' partition '||piv_partition||' not found!', gv_sql);
+      logger.error(v_proc, v_proc||' partition '||piv_partition||' not found!', gv_sql);
       raise_application_error (
         -20170,
         v_proc||' partition '||piv_partition||' not found!'
       );
     when others then 
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
   
@@ -223,16 +247,16 @@ as
     execute immediate gv_sql into v_cnt;
 
     if v_cnt = 0 then
-      pl.logger.info(v_proc, ' partition '||piv_partition||' not found', gv_sql);
+      logger.info(v_proc, ' partition '||piv_partition||' not found', gv_sql);
     else 
       gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' drop partition '||piv_partition;
       execute immediate gv_sql;
-      pl.logger.success(v_proc, ' partition '||piv_partition||' dropped', gv_sql);
+      logger.success(v_proc, ' partition '||piv_partition||' dropped', gv_sql);
     end if;
   
   exception 
     when others then 
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
   
@@ -274,13 +298,15 @@ as
     v_cnt           number;
     
   begin
-
-    pl.logger := util.logtype.init(v_proc);
+    logger := util.logtype.init(v_proc);
 
     v_col_data_type := find_partiotion_col_type(piv_owner, piv_table);
 
     for c1 in (
-      select t.partition_name, t.high_value from all_tab_partitions t 
+      select 
+        t.partition_name, t.high_value 
+      from 
+        all_tab_partitions t 
       where 
         upper(t.table_owner)= upper(piv_owner) and
         upper(t.table_name) = upper(piv_table)  
@@ -297,7 +323,7 @@ as
       if v_cnt = 1 then 
         gv_sql := 'alter table '||piv_owner||'.'||piv_table||' drop partition '|| c1.partition_name; 
         execute immediate gv_sql;
-        pl.logger.success('op:'||piv_operator, gv_sql);
+        logger.success('op:'||piv_operator, gv_sql);
       end if;
 
     end loop;
@@ -305,7 +331,7 @@ as
   
   exception 
     when others then 
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
 
@@ -376,6 +402,18 @@ as
   end;
 
 
+  function find_partition_range_type(piv_part_name varchar2) return char 
+  is
+    v_part_prefix varchar2(10) := '';
+    v_part_suffix varchar2(10) := '';
+    v_range_type  char(1):= 'd';
+  begin
+    v_part_prefix := find_partition_prefix(piv_part_name);
+    v_part_suffix := ltrim(piv_part_name, v_part_prefix);
+    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end;
+    return v_range_type;
+  end;
+
   function find_partition_range_type(piv_owner varchar2, piv_table varchar2) return char
   is
     v_part_name varchar2(100);
@@ -391,17 +429,7 @@ as
     return find_partition_range_type(v_part_name);   
   end;
 
-  function find_partition_range_type(piv_part_name varchar2) return char 
-  is
-    v_part_prefix varchar2(10) := '';
-    v_part_suffix varchar2(10) := '';
-    v_range_type  char(1):= 'd';
-  begin
-    v_part_prefix := find_partition_prefix(v_part_name);
-    v_part_suffix := ltrim(v_part_name, v_part_prefix);
-    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end;
-    return v_range_type;
-  end;
+
 
 
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date)
@@ -416,7 +444,7 @@ as
   begin
     
     gv_proc   := 'pl.add_partitions'; 
-    pl.logger := util.logtype.init(gv_proc);
+    logger := util.logtype.init(gv_proc);
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
@@ -432,14 +460,18 @@ as
     end if;
 
     execute immediate gv_sql into v_max_date;
-    
-    printl(gv_sql);
-    printl(to_char(pid_date,'yyyyymmdd'));
-    printl(to_char(v_max_date,'yyyyymmdd'));
 
-    for i in 1 .. pid_date-v_max_date loop
-      add_partition(piv_owner, piv_table, v_max_date+i);
-    end loop; 
+    loop 
+
+      v_max_date := case v_range_type
+        when 'd' then v_max_date + 1
+        when 'm' then add_months(v_max_date,1)
+        when 'y' then add_months(v_max_date,12)
+      end;
+      add_partition(piv_owner, piv_table, v_max_date);
+
+      exit when v_max_date > pid_date; 
+    end loop;
 
 --  exception 
 --  when others then 
@@ -461,7 +493,7 @@ as
   begin
   
     gv_proc := 'add_partition';
-    pl.logger := util.logtype.init(gv_proc);
+    logger := util.logtype.init(gv_proc);
 
     v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
     v_last_part   := find_max_partition(piv_owner, piv_table);
@@ -487,7 +519,7 @@ as
     printl(gv_sql);
     execute immediate gv_sql;
     
-    pl.logger.success('partition '||v_part_name ||' added to '||piv_owner||'.'||piv_table, gv_sql);
+    logger.success('partition '||v_part_name ||' added to '||piv_owner||'.'||piv_table, gv_sql);
 
 --  exception 
 --  when others then 
@@ -498,7 +530,7 @@ as
   
   procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number)
   is
-    v_range_type := find_partition_range_type(piv_owner, piv_table);
+    v_range_type char(2) := find_partition_range_type(piv_owner, piv_table);
   begin
     gv_proc := 'pl.window_partitions';
     add_partitions(piv_owner,piv_table,pid_date);
@@ -526,7 +558,7 @@ as
 
   exception
     when others then
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
 
@@ -541,10 +573,10 @@ as
       
       gv_sql := 'alter session disable parallel dml';
       execute immediate gv_sql;
-      pl.logger.success(v_proc, ' disabled parallel dml for current session', gv_sql);
+      logger.success(v_proc, ' disabled parallel dml for current session', gv_sql);
   exception
     when others then
-      pl.logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
 

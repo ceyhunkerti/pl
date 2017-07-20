@@ -27,3 +27,12 @@ begin
   util.pl.drop_partition_gt('DDBWH','t1', sysdate);  
     
 end;
+
+declare
+    v_res dbms_sql.varchar2_table := util.pl.split('aaa:bbb:ccc',':');
+
+begin
+    for i in v_res.first .. v_res.last loop
+        util.pl.printl(v_res(i));
+    end loop;
+end;
