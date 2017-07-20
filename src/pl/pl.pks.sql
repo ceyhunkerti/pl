@@ -35,9 +35,10 @@ as
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;
 
-
+  procedure println(piv_message varchar2);
   procedure printl(piv_message varchar2);
-  procedure print (piv_message varchar2);
+  procedure p(piv_message varchar2);
+  procedure print(piv_message varchar2);
   
 
 end;

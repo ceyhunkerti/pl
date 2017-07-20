@@ -430,8 +430,6 @@ as
   end;
 
 
-
-
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date)
   is
     v_part long := find_max_partition(piv_owner, piv_table);
@@ -584,6 +582,18 @@ as
   -- for those who struggels to remember dbms_output.putline! :) like me
   ------------------------------------------------------------------------------
   procedure printl(piv_message varchar2)
+  is
+  begin
+    dbms_output.put_line(piv_message);
+  end;
+
+  procedure println(piv_message varchar2)
+  is
+  begin
+    dbms_output.put_line(piv_message);
+  end;
+
+  procedure p(piv_message varchar2)
   is
   begin
     dbms_output.put_line(piv_message);
