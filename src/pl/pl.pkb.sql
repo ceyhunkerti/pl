@@ -567,6 +567,33 @@ as
   end;
 
 
+  procedure exchange_partition(
+    piv_owner     varchar2, 
+    piv_table_1   varchar2, 
+    piv_part_name varchar2,
+    piv_table_2   varchar2,
+    pib_validate  boolean default false
+  ) IS
+  begin
+
+    gv_proc := gv_package||'.exchange_partition';
+    logger := util.logtype.init(gv_proc);
+
+    gv_sql := 
+      'alter table '||piv_owner||'.'||piv_table_1||' exchange partition '|| piv_part_name||'
+      with table '||piv_table_2||case pib_validate when false then ' without validation' else '' end;
+    
+    execute immediate gv_sql;
+
+    logger.success('partition exchange', gv_sql);
+
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
+
 
   ------------------------------------------------------------------------------
   -- disable parallel dml for the current session
