@@ -1,6 +1,6 @@
 create or replace package util.pl authid current_user
 as
-  logger  logtype := util.logtype.init('anonymous');
+  logger logtype := util.logtype.init('anonymous');
   
   function is_number(piv_str varchar2) return boolean;
   function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table;
@@ -14,6 +14,8 @@ as
   
   function table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
   
+  procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null);
+
 
   -- partition management  
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date);

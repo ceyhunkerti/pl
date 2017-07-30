@@ -490,7 +490,7 @@ as
     v_date date;
   begin
   
-    gv_proc := 'add_partition';
+    gv_proc := gv_package||'.add_partition';
     logger := util.logtype.init(gv_proc);
 
     v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
@@ -559,6 +559,13 @@ as
       logger.error(v_proc, SQLERRM, gv_sql);
       raise;
   end;
+
+  procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null) 
+  is
+  begin
+    dbms_stats.gather_table_stats (piv_owner,piv_table,piv_part_name);
+  end;
+
 
 
   ------------------------------------------------------------------------------
