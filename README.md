@@ -22,3 +22,18 @@ function split(
   Returns
      (varchar2_table): Returns the string segments.
   ```
+
+  
+  * **is_number**
+  
+  ```sql
+  function is_number(piv_str varchar2) return boolean;
+  ```
+
+  ```sql
+  Checks if string is classified as a Number or not.
+  Arguments: 
+     [piv_str='']    (varchar2): The string to check.
+  Returns
+     (boolean): Returns true if string is numeric.
+  ```
