@@ -37,3 +37,18 @@ function split(
   Returns
      (boolean): Returns true if string is numeric.
   ```
+
+  * **date_string**
+
+  ```sql
+  function date_string(pid_date date) return varchar2;
+  ```
+
+  ```sql
+  Returns a date as string containing to_date function
+  Arguments: 
+     [pid_date=''] (date): The date object.
+  Returns
+     (varchar2): the date function string
+     example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'') 
+  ```
