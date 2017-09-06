@@ -251,7 +251,11 @@
   * **window_partitions**
 
     ```sql
-    procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number)
+    procedure window_partitions(
+      piv_owner varchar2, 
+      piv_table varchar2, 
+      pid_date date, 
+      pin_window_size number)
     ```
 
     ```sql
