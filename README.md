@@ -4,7 +4,7 @@
 
 ### API
 
-  * <span style="color:#1565C0">split</span>
+  * :large_blue_circle: **split**
 
     ```sql
     function split(
@@ -25,7 +25,7 @@
          (varchar2_table): Returns the string segments.
     ```
   
-  * <span style="color:#1565C0">**is_number**</span>
+  * :large_blue_circle: **is_number**
   
     ```sql
     function is_number(piv_str varchar2) return boolean
