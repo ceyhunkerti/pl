@@ -124,3 +124,18 @@
        [piv_table] (varchar2): Name of the table
        [piv_part_name] (varchar2): Name of the partition defaults to null
     ```
+
+  * **add_partitions**  
+
+    ```sql
+    procedure add_partitions(piv_owner varchar2, piv_table varchar2, pid_date date)
+    ```
+
+    ```sql
+    Adds partitions to the given table up to the date given by the 'pid_date' parameter. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date]  (date): the date up to partitions will be added 
+    ```
