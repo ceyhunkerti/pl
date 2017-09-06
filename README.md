@@ -15,6 +15,7 @@
 
     ```sql
     Checks if string is classified as a Number or not.
+    
     Arguments: 
        [piv_str='']    (varchar2): The string to check.
     Returns
@@ -87,4 +88,21 @@
     Arguments: 
        [piv_owner] (varchar2): Schema of the table
        [piv_table] (varchar2): Name of the table
+       [pib_ignore_err=true] (boolean): when set to false raises error
+    ```
+
+  * **table_exists**
+
+    ```sql
+    function table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
+    ```
+
+    ```sql
+    Checks whether the given table exists or not 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+    Returns:
+       (boolean): true if table exists
     ```
