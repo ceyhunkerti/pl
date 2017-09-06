@@ -4,7 +4,7 @@
 
 ### API
 
-  * **split**
+  * <span style="color:#1565C0">**split**</span>
 
     ```sql
     function split(
@@ -25,7 +25,7 @@
          (varchar2_table): Returns the string segments.
     ```
   
-  * **is_number**
+  * <span style="color:#1565C0">**is_number**</span>
   
     ```sql
     function is_number(piv_str varchar2) return boolean
