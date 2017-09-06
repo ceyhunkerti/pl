@@ -48,7 +48,7 @@ function split(
   Returns a date as string containing to_date function. 
   Useful when used with 'execute immediate'
   Arguments: 
-     [pid_date=''] (date): The date object.
+     [pid_date] (date): The date object.
   Returns
      (varchar2): the date function string
      example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
@@ -56,15 +56,13 @@ function split(
 
   * **truncate_table**
 
-  ```
+  ```sql
   procedure truncate_table(piv_owner varchar2, piv_table varchar2)
   ```
 
     ```sql
   Returns a date as string containing to_date function
   Arguments: 
-     [pid_date=''] (date): The date object.
-  Returns
-     (varchar2): the date function string
-     example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
+     [piv_owner] (varchar2): Schema of the table
+     [piv_table] (varchar2): Name of the table
   ```
