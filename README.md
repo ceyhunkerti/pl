@@ -137,7 +137,7 @@
     Arguments: 
        [piv_owner] (varchar2): Schema of the table
        [piv_table] (varchar2): Name of the table
-       [pid_date]  (date): the date up to partitions will be added 
+       [pid_date] (date): the date up to partitions will be added 
     ```
   
   * **add_partition**
@@ -152,7 +152,7 @@
     Arguments: 
        [piv_owner] (varchar2): Schema of the table
        [piv_table] (varchar2): Name of the table
-       [pid_date]  (date): the date partition will be created for 
+       [pid_date] (date): the date partition will be created for 
     ```
 
   * **truncate_partition**
@@ -167,5 +167,51 @@
     Arguments: 
        [piv_owner] (varchar2): Schema of the table
        [piv_table] (varchar2): Name of the table
-       [piv_partition]  (varchar2): name of the partition 
+       [piv_partition] (varchar2): name of the partition 
+    ```
+
+  * **drop_partition**
+
+    ```
+    procedure drop_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+    ```
+
+    ```sql
+    Drops the given partition.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_partition] (varchar2): name of the partition 
+    ```
+  
+  * **drop_partition_lt**
+
+    ```sql
+    procedure drop_partition_lt (piv_owner varchar2, piv_table varchar2, pid_date date); 
+    ```
+
+    ```sql
+    Drops partitions less than the given date.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date] (varchar2): date boundary 
+    ```
+
+
+  * **drop_partition_lte**
+  
+    ```sql
+    procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date)
+    ```
+
+    ```sql
+    Drops partitions less than or equal to the given date.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date] (varchar2): date boundary 
     ```

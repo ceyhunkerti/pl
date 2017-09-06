@@ -19,7 +19,6 @@ as
   procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date);
   procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2);
   procedure drop_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2);
-  procedure drop_partition(piv_owner varchar2, piv_table varchar2, pid_date date, piv_operator varchar2 default '<' );
   procedure drop_partition_lt (piv_owner varchar2, piv_table varchar2, pid_date date);  
   procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date);  
   procedure drop_partition_gt (piv_owner varchar2, piv_table varchar2, pid_date date);  

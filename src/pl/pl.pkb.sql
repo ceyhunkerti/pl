@@ -40,6 +40,8 @@ as
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
 
+  procedure drop_partition(piv_owner varchar2, piv_table varchar2, pid_date date, piv_operator varchar2 default '<' );
+
   -- Splits string by separator.
   -- Arguments: 
   --    [piv_str='']    (varchar2): The string to split.
