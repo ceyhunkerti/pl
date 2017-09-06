@@ -6,14 +6,14 @@
 
  * **split**
 
-```
+```sql
 function split(
   piv_str varchar2, 
   piv_split varchar2 default ',', 
   pin_limit number default null
 ) return dbms_sql.varchar2_table;
 ``` 
-```
+```sql
   Splits string by separator.
   Arguments: 
      [piv_str='']    (varchar2): The string to split.
