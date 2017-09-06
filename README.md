@@ -110,7 +110,10 @@
   * **gather_table_stats**
 
     ```sql
-    procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null) 
+    procedure gather_table_stats(
+      piv_owner varchar2, 
+      piv_table varchar2, 
+      piv_part_name varchar2 default null) 
     ```
 
     ```sql
