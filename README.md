@@ -16,6 +16,7 @@
 
     ```sql
       Splits string by separator.
+
       Arguments: 
          [piv_str='']    (varchar2): The string to split.
          [piv_split=','] (varchar2): The separator pattern to split by.
@@ -47,6 +48,7 @@
     ```sql
     Returns a date as string containing to_date function. 
     Useful when used with 'execute immediate'
+    
     Arguments: 
        [pid_date] (date): The date object.
     Returns:
@@ -62,6 +64,7 @@
 
     ```sql
     Truncates the given table
+    
     Arguments: 
        [piv_owner] (varchar2): Schema of the table
        [piv_table] (varchar2): Name of the table
@@ -71,4 +74,12 @@
 
     ```
     procedure drop_table(piv_owner varchar2, piv_table varchar2, pib_ignore_err boolean default true);
+    ```
+
+    ```sql
+    Drops the given table
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
     ```
