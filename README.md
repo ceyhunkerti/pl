@@ -215,3 +215,53 @@
        [piv_table] (varchar2): Name of the table
        [pid_date] (varchar2): date boundary 
     ```
+
+
+  * **drop_partition_gt**
+
+    ```sql
+    procedure drop_partition_gt (piv_owner varchar2, piv_table varchar2, pid_date date)
+    ```
+
+    ```sql
+    Drops partitions greater than the given date.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date] (varchar2): date boundary 
+    ```
+
+  
+  * **drop_partition_gte**
+
+    ```sql
+    procedure drop_partition_gte (piv_owner varchar2, piv_table varchar2, pid_date date)
+    ```
+
+    ```sql
+    Drops partitions greater than or equal to the given date.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date] (varchar2): date boundary 
+    ```
+
+  * **window_partitions**
+
+    ```sql
+    procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number)
+    ```
+
+    ```sql
+    Manages partitions for the given table by fitting the partitions to the given date with pid_date parameter
+    and given number by pin_number_size parameter. Basically it adds partitions until pid_date and drops partitions
+    older than pin_window_size * (year|month|day)
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date] (varchar2): date boundary 
+       [pin_window_size] (number): number of partitions to keep
+    ```
