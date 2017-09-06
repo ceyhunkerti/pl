@@ -139,3 +139,33 @@
        [piv_table] (varchar2): Name of the table
        [pid_date]  (date): the date up to partitions will be added 
     ```
+  
+  * **add_partition**
+
+    ```sql
+    procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date)
+    ```
+
+    ```sql
+    Adds a single partition to the given table with the date given by the 'pid_date' parameter. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [pid_date]  (date): the date partition will be created for 
+    ```
+
+  * **truncate_partition**
+
+    ```
+    procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+    ```
+
+    ```sql
+    Truncates the given partition.
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_partition]  (varchar2): name of the partition 
+    ```
