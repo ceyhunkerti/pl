@@ -4,25 +4,25 @@
 
 ### API
 
- * **split**
+  * **split**
 
-  ```sql
-  function split(
-    piv_str varchar2, 
-    piv_split varchar2 default ',', 
-    pin_limit number default null
-  ) return dbms_sql.varchar2_table
-  ``` 
-  ```sql
-    Splits string by separator.
-    Arguments: 
-       [piv_str='']    (varchar2): The string to split.
-       [piv_split=','] (varchar2): The separator pattern to split by.
-       [pin_limit]     (number): The length to truncate results to.
-    Returns
-       (varchar2_table): Returns the string segments.
-  ```
+    ```sql
+    function split(
+      piv_str varchar2, 
+      piv_split varchar2 default ',', 
+      pin_limit number default null
+    ) return dbms_sql.varchar2_table
+    ``` 
 
+    ```sql
+      Splits string by separator.
+      Arguments: 
+         [piv_str='']    (varchar2): The string to split.
+         [piv_split=','] (varchar2): The separator pattern to split by.
+         [pin_limit]     (number): The length to truncate results to.
+      Returns
+         (varchar2_table): Returns the string segments.
+    ```
   
   * **is_number**
   
