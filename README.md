@@ -50,5 +50,5 @@ function split(
      [pid_date=''] (date): The date object.
   Returns
      (varchar2): the date function string
-     example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'') 
+     example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
   ```
