@@ -106,3 +106,18 @@
     Returns:
        (boolean): true if table exists
     ```
+
+  * **gather_table_stats**
+
+    ```sql
+    procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null) 
+    ```
+
+    ```sql
+    Gather table/partition statistics 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_part_name] (varchar2): Name of the partition defaults to null
+    ```
