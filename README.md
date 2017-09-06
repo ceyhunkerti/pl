@@ -4,7 +4,7 @@
 
 ### API
 
-  * <span style="color:#1565C0">**split**</span>
+  * <span style="color:#1565C0">split</span>
 
     ```sql
     function split(
