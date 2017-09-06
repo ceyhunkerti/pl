@@ -1,4 +1,4 @@
-create or replace package body util.pl
+create or replace package body pl
 as
 
   ------------------------------------------------------------------------------
@@ -181,10 +181,10 @@ as
   begin  
     gv_sql := 'alter session enable parallel dml';
     execute immediate gv_sql;
-    logger.success(v_proc, ' enabled parallel dml for current session', gv_sql);
+    logger.success( ' enabled parallel dml for current session', gv_sql);
   exception
     when others then
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       raise;
   end;
 
@@ -212,18 +212,18 @@ as
     else 
       gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' truncate partition '||piv_partition;
       execute immediate gv_sql;
-      logger.success(v_proc, ' partition '||piv_partition||' truncated', gv_sql);
+      logger.success( ' partition '||piv_partition||' truncated', gv_sql);
     end if;
   
   exception 
     when partition_not_found then
-      logger.error(v_proc, v_proc||' partition '||piv_partition||' not found!', gv_sql);
+      logger.error(v_proc||' partition '||piv_partition||' not found!', gv_sql);
       raise_application_error (
         -20170,
         v_proc||' partition '||piv_partition||' not found!'
       );
     when others then 
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       raise;
   end;
   
@@ -247,16 +247,16 @@ as
     execute immediate gv_sql into v_cnt;
 
     if v_cnt = 0 then
-      logger.info(v_proc, ' partition '||piv_partition||' not found', gv_sql);
+      logger.info(' partition '||piv_partition||' not found', gv_sql);
     else 
       gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' drop partition '||piv_partition;
       execute immediate gv_sql;
-      logger.success(v_proc, ' partition '||piv_partition||' dropped', gv_sql);
+      logger.success( ' partition '||piv_partition||' dropped', gv_sql);
     end if;
   
   exception 
     when others then 
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error( SQLERRM, gv_sql);
       raise;
   end;
   
@@ -298,7 +298,7 @@ as
     v_cnt           number;
     
   begin
-    logger := util.logtype.init(v_proc);
+    logger := logtype.init(v_proc);
 
     v_col_data_type := find_partiotion_col_type(piv_owner, piv_table);
 
@@ -331,7 +331,7 @@ as
   
   exception 
     when others then 
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       raise;
   end;
 
@@ -442,7 +442,7 @@ as
   begin
     
     gv_proc   := 'pl.add_partitions'; 
-    logger := util.logtype.init(gv_proc);
+    logger := logtype.init(gv_proc);
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
@@ -491,7 +491,7 @@ as
   begin
   
     gv_proc := gv_package||'.add_partition';
-    logger := util.logtype.init(gv_proc);
+    logger := logtype.init(gv_proc);
 
     v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
     v_last_part   := find_max_partition(piv_owner, piv_table);
@@ -556,7 +556,7 @@ as
 
   exception
     when others then
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error(SQLERRM, gv_sql);
       raise;
   end;
 
@@ -577,7 +577,7 @@ as
   begin
 
     gv_proc := gv_package||'.exchange_partition';
-    logger := util.logtype.init(gv_proc);
+    logger := logtype.init(gv_proc);
 
     gv_sql := 
       'alter table '||piv_owner||'.'||piv_table_1||' exchange partition '|| piv_part_name||'
@@ -605,10 +605,10 @@ as
       
       gv_sql := 'alter session disable parallel dml';
       execute immediate gv_sql;
-      logger.success(v_proc, ' disabled parallel dml for current session', gv_sql);
+      logger.success(' disabled parallel dml for current session', gv_sql);
   exception
     when others then
-      logger.error(v_proc, SQLERRM, gv_sql);
+      logger.error( SQLERRM, gv_sql);
       raise;
   end;
 

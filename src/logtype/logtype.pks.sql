@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE util.logtype as object (
+CREATE OR REPLACE TYPE logtype as object (
 
   name        varchar2(1000),
   log_level   varchar2(20),

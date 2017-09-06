@@ -1,4 +1,4 @@
-create or replace type body util.logtype as
+create or replace type body logtype as
 
   ------------------------------------------------------------------------------
   -- License
@@ -40,7 +40,7 @@ create or replace type body util.logtype as
   member procedure persist
   is
   begin
-    insert into util.logs(
+    insert into logs(
       name,
       log_level,
       start_date,

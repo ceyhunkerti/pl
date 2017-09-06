@@ -1,6 +1,6 @@
-create or replace package util.pl authid current_user
+create or replace package pl authid current_user
 as
-  logger logtype := util.logtype.init('anonymous');
+  logger logtype := logtype.init('anonymous');
   
   function is_number(piv_str varchar2) return boolean;
   function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table;
