@@ -7,7 +7,11 @@
  * **split**
 
 ```
-function split(piv_str varchar2, piv_split varchar2 default ',', pin_limit number default null) return dbms_sql.varchar2_table;
+function split(
+  piv_str varchar2, 
+  piv_split varchar2 default ',', 
+  pin_limit number default null
+) return dbms_sql.varchar2_table;
 ``` 
 ```
   Splits string by separator.
