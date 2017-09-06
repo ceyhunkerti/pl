@@ -11,7 +11,7 @@ function split(
   piv_str varchar2, 
   piv_split varchar2 default ',', 
   pin_limit number default null
-) return dbms_sql.varchar2_table;
+) return dbms_sql.varchar2_table
 ``` 
 ```sql
   Splits string by separator.
@@ -27,7 +27,7 @@ function split(
   * **is_number**
   
   ```sql
-  function is_number(piv_str varchar2) return boolean;
+  function is_number(piv_str varchar2) return boolean
   ```
 
   ```sql
@@ -41,10 +41,26 @@ function split(
   * **date_string**
 
   ```sql
-  function date_string(pid_date date) return varchar2;
+  function date_string(pid_date date) return varchar2
   ```
 
   ```sql
+  Returns a date as string containing to_date function. 
+  Useful when used with 'execute immediate'
+  Arguments: 
+     [pid_date=''] (date): The date object.
+  Returns
+     (varchar2): the date function string
+     example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
+  ```
+
+  * **truncate_table**
+
+  ```
+  procedure truncate_table(piv_owner varchar2, piv_table varchar2)
+  ```
+
+    ```sql
   Returns a date as string containing to_date function
   Arguments: 
      [pid_date=''] (date): The date object.
