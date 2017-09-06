@@ -60,8 +60,8 @@ function split(
   procedure truncate_table(piv_owner varchar2, piv_table varchar2)
   ```
 
-    ```sql
-  Returns a date as string containing to_date function
+  ```sql
+  Truncates the given table
   Arguments: 
      [piv_owner] (varchar2): Schema of the table
      [piv_table] (varchar2): Name of the table
