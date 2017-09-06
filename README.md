@@ -49,7 +49,7 @@ function split(
   Useful when used with 'execute immediate'
   Arguments: 
      [pid_date] (date): The date object.
-  Returns
+  Returns:
      (varchar2): the date function string
      example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
   ```
@@ -66,3 +66,9 @@ function split(
      [piv_owner] (varchar2): Schema of the table
      [piv_table] (varchar2): Name of the table
   ```
+
+  * **drop_table**
+
+    ```
+      procedure drop_table(piv_owner varchar2, piv_table varchar2, pib_ignore_err boolean default true);
+    ```
