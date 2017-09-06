@@ -40,8 +40,14 @@ as
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
 
-
-  function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table
+  -- Splits string by separator.
+  -- Arguments: 
+  --    [piv_str='']    (varchar2): The string to split.
+  --    [piv_split=','] (varchar2): The separator pattern to split by.
+  --    [pin_limit]     (number): The length to truncate results to.
+  -- Returns
+  --    (varchar2_table): Returns the string segments.
+  function split(piv_str varchar2, piv_split varchar2 default ',', pin_limit number default null) return dbms_sql.varchar2_table
   is
     i number := 0;
     v_str varchar2(4000) := piv_str;
@@ -59,6 +65,9 @@ as
         end if;
         exit;
       end if;
+
+      if pin_limit is not null and pin_limit >= i then exit; end if;
+
     end loop;
 
     return v_res;

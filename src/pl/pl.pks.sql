@@ -3,7 +3,7 @@ as
   logger logtype := logtype.init('anonymous');
   
   function is_number(piv_str varchar2) return boolean;
-  function split(piv_str varchar2, piv_split varchar2 default ',') return dbms_sql.varchar2_table;
+  function split(piv_str varchar2, piv_split varchar2 default ',', pin_limit number default null) return dbms_sql.varchar2_table;
 
 
   function date_string(pid_date date) return varchar2;
