@@ -314,7 +314,7 @@
     Disable parallel dml for the current session.     
     ```
 
-    * **println**
+  * **println**
 
     ```sql
     procedure println(piv_message varchar2);
@@ -328,7 +328,7 @@
     ```
 
 
-    * **printl**
+  * **printl**
 
     ```sql
     procedure printl(piv_message varchar2);
