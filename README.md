@@ -269,3 +269,100 @@
        [pid_date] (varchar2): date boundary 
        [pin_window_size] (number): number of partitions to keep
     ```
+
+  * **exchange_partition**
+
+    ```sql
+      procedure exchange_partition(
+        piv_owner     varchar2, 
+        piv_table_1   varchar2, 
+        piv_part_name varchar2,
+        piv_table_2   varchar2,
+        pib_validate  boolean default false
+      );
+    ```
+
+    ```sql
+    Exchanges partition of table_1 with the table_2
+
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_part_name] (varchar2): partitions to be exchanged 
+       [piv_table_2] (varchar2): table to replace partition
+       [pib_validate=false] (boolean): validate partition after exchange
+    ```
+
+  * **enable_parallel_dml**
+    
+    ```sql
+    procedure enable_parallel_dml
+    ```
+
+    ```sql
+    Enable parallel dml for the current session.     
+    ```
+
+  
+  * **disable_parallel_dml**
+    
+    ```sql
+    procedure disable_parallel_dml
+    ```
+
+    ```sql
+    Disable parallel dml for the current session.     
+    ```
+
+    * **println**
+
+    ```sql
+    procedure println(piv_message varchar2);
+    ```
+
+    ```sql
+    Print to dbms out. Shortcut for dbms_output.put_line
+
+    Arguments: 
+       [piv_message] (varchar2): Message to print
+    ```
+
+
+    * **printl**
+
+    ```sql
+    procedure printl(piv_message varchar2);
+    ```
+
+    ```sql
+    Print to dbms out. Shortcut for dbms_output.put_line
+
+    Arguments: 
+       [piv_message] (varchar2): Message to print
+    ```    
+
+  * **p**
+
+    ```sql
+    procedure p(piv_message varchar2);
+    ```
+
+    ```sql
+    Print to dbms out. Shortcut for dbms_output.put_line
+
+    Arguments: 
+       [piv_message] (varchar2): Message to print
+    ```    
+
+  * **print**
+
+    ```sql
+    procedure print(piv_message varchar2);
+    ```
+
+    ```sql
+    Print to dbms out. Shortcut for dbms_output.put
+
+    Arguments: 
+       [piv_message] (varchar2): Message to print
+    ```    
