@@ -24,11 +24,11 @@
       alter session set current_schema = util;
     ```
 
-  * Run the contents of [src/logtype/logs.ddl.sql](src/logtype/logs.ddl.sql)
+  * Run the contents of [logs.ddl.sql](src/logtype/logs.ddl.sql)
 
-  * Run the contents of [src/logtype/logtype.pks.sql](src/logtype/logtype.pks.sql) and [src/logtype/logtype.pkb.sql](src/logtype/logtype.pkb.sql) in order.
+  * Run the contents of [logtype.pks.sql](src/logtype/logtype.pks.sql) and [logtype.pkb.sql](src/logtype/logtype.pkb.sql) in order.
 
-  * Run the contents of [src/pl/pl.pks.sql](src/pl/pl.pks.sql) and [src/pl/pl.pkb.sql](src/pl/pl.pkb.sql) in order.
+  * Run the contents of [pl.pks.sql](src/pl/pl.pks.sql) and [pl.pkb.sql](src/pl/pl.pkb.sql) in order.
 
   * Optionally create a public synonym for pl with;
 
