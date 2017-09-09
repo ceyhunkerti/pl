@@ -5,6 +5,38 @@
   Contains common utility and logging methods.
 
 
+### INSTALLATION
+
+  You can put the objects under any schema you like, but you can create a utility
+  schema ,if you do not have already, and put all the objects under that schema.
+
+
+  * Create a schema named **util** with:
+    ```sql
+      create user util identified by <password>;
+
+      grant connect, resource to util;
+    ```
+
+  * Change the current schema to **util**
+
+    ```sql
+      alter session set current_schema = util;
+    ```
+
+  * Run the contents of **logtype/logs.ddl.sql**
+
+  * Run the contents of **logtype/logtype.pks.sql** and **logtype/logtype.pkb.sql** in order.
+
+  * Run the contents of **pl/pl.pks.sql** and **pl/pl.pkb.sql** in order.
+
+  * Optionally create a public synonym for pl with;
+
+    ```sql
+      create public synonym pl for util.pl;  
+    ```
+
+
 ### API
 
   * **is_number**
