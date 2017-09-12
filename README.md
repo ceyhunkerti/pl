@@ -211,6 +211,57 @@
        [piv_table] (varchar2): Name of the table
     ```
 
+  * **manage_indexes**
+
+    ```sql
+    procedure manage_indexes(
+      piv_owner varchar2, 
+      piv_table varchar2, 
+      piv_order varchar2 default 'enable') 
+    ```
+
+    ```sql
+    Unusable/Rebuild indexes for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_order] (varchar2): DISABLE|ENABLE
+        DISABLE makes the indexes unusable
+        ENABLE rebuilds the indexes
+    ```  
+
+  * **enable_indexes**
+
+    ```sql
+    procedure enable_indexes(
+      piv_owner varchar2, 
+      piv_table varchar2) 
+    ```
+
+    ```sql
+    Rebuild indexes for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+    ```
+
+  * **disable_indexes**
+
+    ```sql
+    procedure disable_indexes(
+      piv_owner varchar2, 
+      piv_table varchar2) 
+    ```
+
+    ```sql
+    Make indexes unusable for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+    ```
 
   * **add_partitions**  
 

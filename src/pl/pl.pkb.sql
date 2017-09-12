@@ -581,9 +581,9 @@ as
   is
   begin
 
-    for c in (select constraint_name from dba_constraints where owner = piv_owner and table_name = piv_table)
+    for c in (select constraint_name from dba_constraints where owner = upper(piv_owner) and table_name = upper(piv_table) )
     loop
-      execute immediate 'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint '||constraint_name;
+      execute immediate 'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint '||c.constraint_name;
     end loop;
 
   exception 
@@ -602,7 +602,6 @@ as
       raise;  
   end;
 
-
   procedure disable_constraints(piv_owner varchar2, piv_table varchar2) 
   is
   begin
@@ -612,6 +611,42 @@ as
       pl.logger.error(SQLERRM, gv_sql);
       raise;  
   end;
+
+  procedure manage_indexes(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable') 
+  is
+  begin
+
+    for c in (select index_name from dba_indexes where table_owner = upper(piv_owner) and table_name = upper(piv_table))
+    loop
+      execute immediate 'alter index '||c.index_name||' '||case lower(piv_order) when 'disable' then 'unusable' else 'rebuild';
+    end loop;
+
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
+  procedure enable_indexes(piv_owner varchar2, piv_table varchar2) 
+  is
+  begin
+    manage_indexes(piv_owner, piv_table);
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
+  procedure disable_indexes(piv_owner varchar2, piv_table varchar2) 
+  is
+  begin
+    manage_indexes(piv_owner, piv_table, 'DISABLE');
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
 
   procedure exchange_partition(
     piv_owner     varchar2, 

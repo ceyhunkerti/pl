@@ -15,7 +15,10 @@ as
   procedure manage_constraints(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable');
   procedure enable_constraints(piv_owner varchar2, piv_table varchar2);
   procedure disable_constraints(piv_owner varchar2, piv_table varchar2);
-
+  procedure manage_indexes(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable');
+  procedure enable_indexes(piv_owner varchar2, piv_table varchar2);
+  procedure disable_indexes(piv_owner varchar2, piv_table varchar2);
+  
   -- partition management  
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date);
   procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date);
