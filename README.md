@@ -34,6 +34,10 @@
 
     ```sql
       create public synonym pl for util.pl;  
+
+      grant execute on util.logtype to public;
+
+      grant execute on util.pl to public;
     ```
 
 
