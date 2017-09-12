@@ -12,7 +12,9 @@ as
   procedure drop_table(piv_owner varchar2, piv_table varchar2, pib_ignore_err boolean default true);
   function table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
   procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null);
-
+  procedure manage_constraints(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable');
+  procedure enable_constraints(piv_owner varchar2, piv_table varchar2);
+  procedure disable_constraints(piv_owner varchar2, piv_table varchar2);
 
   -- partition management  
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date);

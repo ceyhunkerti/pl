@@ -161,6 +161,57 @@
        [piv_part_name] (varchar2): Name of the partition defaults to null
     ```
 
+  * **manage_constraints**
+
+    ```sql
+    procedure manage_constraints(
+      piv_owner varchar2, 
+      piv_table varchar2, 
+      piv_order varchar2 default 'enable') 
+    ```
+
+    ```sql
+    Enable/Disable constraints for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+       [piv_order] (varchar2): DISABLE|ENABLE
+    ```  
+
+  * **enable_constraints**
+
+    ```sql
+    procedure enable_constraints(
+      piv_owner varchar2, 
+      piv_table varchar2) 
+    ```
+
+    ```sql
+    Enable constraints for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+    ```
+
+  * **disable_constraints**
+
+    ```sql
+    procedure disable_constraints(
+      piv_owner varchar2, 
+      piv_table varchar2) 
+    ```
+
+    ```sql
+    Disable constraints for the given table. 
+    
+    Arguments: 
+       [piv_owner] (varchar2): Schema of the table
+       [piv_table] (varchar2): Name of the table
+    ```
+
+
   * **add_partitions**  
 
     ```sql

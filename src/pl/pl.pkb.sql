@@ -577,6 +577,41 @@ as
     dbms_stats.gather_table_stats (piv_owner,piv_table,piv_part_name);
   end;
 
+  procedure manage_constraints(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable') 
+  is
+  begin
+
+    for c in (select constraint_name from dba_constraints where owner = piv_owner and table_name = piv_table)
+    loop
+      execute immediate 'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint '||constraint_name;
+    end loop;
+
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
+  procedure enable_constraints(piv_owner varchar2, piv_table varchar2) 
+  is
+  begin
+    manage_constraints(piv_owner, piv_table);
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
+
+
+  procedure disable_constraints(piv_owner varchar2, piv_table varchar2) 
+  is
+  begin
+    manage_constraints(piv_owner, piv_table, 'DISABLE');
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;  
+  end;
 
   procedure exchange_partition(
     piv_owner     varchar2, 
