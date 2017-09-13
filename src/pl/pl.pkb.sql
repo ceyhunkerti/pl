@@ -1,4 +1,4 @@
-create or replace package body pl
+CREATE OR REPLACE package body UTIL.pl
 as
 
   ------------------------------------------------------------------------------
@@ -581,9 +581,9 @@ as
   is
   begin
 
-    for c in (select constraint_name from dba_constraints where owner = upper(piv_owner) and table_name = upper(piv_table) )
+    for c in (select owner, constraint_name from dba_constraints where owner = upper(piv_owner) and table_name = upper(piv_table) )
     loop
-      execute immediate 'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint '||c.constraint_name;
+      execute immediate 'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint ' || c.owner||'.' ||c.constraint_name;
     end loop;
 
   exception 
@@ -616,9 +616,9 @@ as
   is
   begin
 
-    for c in (select index_name from dba_indexes where table_owner = upper(piv_owner) and table_name = upper(piv_table))
+    for c in (select owner, index_name from dba_indexes where table_owner = upper(piv_owner) and table_name = upper(piv_table))
     loop
-      execute immediate 'alter index '||c.index_name||' '||case lower(piv_order) when 'disable' then 'unusable' else 'rebuild';
+      execute immediate 'alter index '|| c.owner||'.'||c.index_name||' '||case lower(piv_order) when 'disable' then 'unusable' else 'rebuild' end;
     end loop;
 
   exception 
