@@ -24,6 +24,14 @@
       alter session set current_schema = util;
     ```
 
+  * Grant privileges
+  
+  ```sql
+      GRANT SELECT ON dba_constraints TO util;
+      
+      GRANT SELECT ON dba_indexes TO util;
+  ```
+
   * Run the contents of [logs.ddl.sql](src/logtype/logs.ddl.sql)
 
   * Run the contents of [logtype.pks.sql](src/logtype/logtype.pks.sql) and [logtype.pkb.sql](src/logtype/logtype.pkb.sql) in order.
