@@ -26,11 +26,11 @@
 
   * Grant privileges
   
-  ```sql
-      GRANT SELECT ON dba_constraints TO util;
-      
-      GRANT SELECT ON dba_indexes TO util;
-  ```
+    ```sql
+        GRANT SELECT ON dba_constraints TO util;
+        
+        GRANT SELECT ON dba_indexes TO util;
+    ```
 
   * Run the contents of [logs.ddl.sql](src/logtype/logs.ddl.sql)
 
