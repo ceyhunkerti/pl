@@ -595,6 +595,7 @@ as
     loop
       gv_sql :=  'alter table '||piv_owner||'.'||piv_table||' '|| piv_order ||' constraint ' ||c.constraint_name;
       execute immediate gv_sql;
+      pl.logger.success('Manage constraint', gv_sql);
     end loop;
 
   exception 
