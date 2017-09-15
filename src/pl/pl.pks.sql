@@ -28,6 +28,7 @@ as
   procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date);  
   procedure drop_partition_gt (piv_owner varchar2, piv_table varchar2, pid_date date);  
   procedure drop_partition_gte(piv_owner varchar2, piv_table varchar2, pid_date date);
+  procedure drop_partition_btw(piv_owner varchar2, piv_table varchar2, pid_start_date date, pid_end_date date);
   procedure window_partitions(piv_owner varchar2, piv_table varchar2, pid_date date, pin_window_size number);
   procedure exchange_partition(
     piv_owner     varchar2, 
@@ -41,6 +42,9 @@ as
   -- session management
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;
+
+  procedure async_exec(piv_sql varchar2);
+
 
   procedure println(piv_message varchar2);
   procedure printl(piv_message varchar2);
