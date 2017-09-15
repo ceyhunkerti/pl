@@ -41,7 +41,6 @@ as
     pib_validate  boolean default false
   );
 
-
   -- session management
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;

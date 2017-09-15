@@ -627,7 +627,7 @@ as
   procedure drop_constraint(piv_owner varchar2, piv_table varchar2, piv_constraint varchar2)
   is
   begin
-    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| 'drop constraint ' ||piv_constraint;
+    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| ' drop constraint ' ||piv_constraint;
     execute immediate gv_sql;
   exception 
     when others then 
@@ -638,7 +638,7 @@ as
   procedure add_unique_constraint(piv_owner varchar2, piv_table varchar2, piv_col_list varchar2, piv_constraint varchar2)
   is
   begin
-    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| 'add (constraint ' ||piv_constraint||' 
+    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| ' add (constraint ' ||piv_constraint||' 
       unique ('||piv_col_list||') enable validate)
     ';
     execute immediate gv_sql;
