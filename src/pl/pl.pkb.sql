@@ -624,6 +624,33 @@ as
       raise;  
   end;
 
+  procedure drop_constraint(piv_owner varchar2, piv_table varchar2, piv_constraint varchar2)
+  is
+  begin
+    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| 'drop constraint ' ||piv_constraint;
+    execute immediate gv_sql;
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;
+  end;
+
+  procedure add_unique_constraint(piv_owner varchar2, piv_table varchar2, piv_col_list varchar2, piv_constraint varchar2)
+  is
+  begin
+    gv_sql :=  'alter table ' ||piv_owner||'.'||piv_table|| 'add (constraint ' ||piv_constraint||' 
+      unique ('||piv_col_list||') enable validate)
+    ';
+    execute immediate gv_sql;
+
+  exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;
+  end;
+
+
+
   procedure manage_indexes(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable') 
   is
   begin
@@ -711,6 +738,7 @@ as
   is 
   begin
     dbms_scheduler.create_job (  
+      name          =>  'ASYNC_EXEC',
       job_type      =>  'PLSQL_BLOCK',  
       job_action    =>  'BEGIN ' || piv_sql || ' END;',  
       start_date    =>  sysdate,  

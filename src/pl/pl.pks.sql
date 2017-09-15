@@ -18,7 +18,10 @@ as
   procedure manage_indexes(piv_owner varchar2, piv_table varchar2, piv_order varchar2 default 'enable');
   procedure enable_indexes(piv_owner varchar2, piv_table varchar2);
   procedure disable_indexes(piv_owner varchar2, piv_table varchar2);
-  
+
+  procedure drop_constraint(piv_owner varchar2, piv_table varchar2, piv_constraint varchar2);
+  procedure add_unique_constraint(piv_owner varchar2, piv_table varchar2, piv_col_list varchar2, piv_constraint varchar2);
+
   -- partition management  
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date);
   procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date);
@@ -43,7 +46,7 @@ as
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;
 
-  procedure async_exec(piv_sql varchar2);
+--  procedure async_exec(piv_sql varchar2);
 
 
   procedure println(piv_message varchar2);
