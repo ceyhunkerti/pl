@@ -460,6 +460,21 @@
     Disable parallel dml for the current session.     
     ```
 
+
+  * **async_exec**
+
+    ```sql
+      procedure async_exec(piv_sql varchar2)
+    ```
+
+    ```sql
+    Execute given statement asynchronously.
+
+    Arguments: 
+       [piv_sql] (varchar2): Statement to execute 
+    ```
+
+
   * **println**
 
     ```sql
