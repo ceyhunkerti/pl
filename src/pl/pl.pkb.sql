@@ -87,7 +87,7 @@ as
   end;  
 
   
-  function find_partiotion_col_type(piv_owner varchar2, piv_table varchar2) return varchar2
+  function find_partition_col_type(piv_owner varchar2, piv_table varchar2) return varchar2
   is
     v_col_data_type varchar2(20)  := 'DATE';
   begin
