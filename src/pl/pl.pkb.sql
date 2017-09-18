@@ -42,7 +42,122 @@ as
 
   procedure drop_partition(piv_owner varchar2, piv_table varchar2, pid_date date, piv_operator varchar2 default '<' );
   function find_partition_col_type(piv_owner varchar2, piv_table varchar2) return varchar2;
-  function find_partition_prefix(piv_part_name varchar2) return varchar2;
+
+  ------------------------------------------------------------------------------
+  -- check if table exists
+  ------------------------------------------------------------------------------
+  function table_exists(piv_owner varchar2, piv_table varchar2) return boolean
+  IS
+    v_proc varchar2(1000) := gv_package || '.table_exists';
+    v_cnt  number := 0;
+  begin
+
+    gv_sql := '
+      select count(1)
+      from all_tables
+      where table_name = upper ('''||piv_table||''') and owner = upper ('''||piv_owner||''')
+    ';
+    execute immediate gv_sql into v_cnt;
+    return case v_cnt when 0 then false else true end; 
+
+  exception
+    when others then
+      logger.error(SQLERRM, gv_sql);
+      raise;
+  end;
+
+  function find_partition_prefix(piv_part_name varchar2) return varchar2
+  is
+    v_chr char(2);
+    v_part_prefix varchar2(10) := '';
+  begin
+    
+    printl('v_part_name: ' || piv_part_name);    
+  
+    for i in 1 .. length(piv_part_name) loop
+      v_chr := substr(piv_part_name,i,1);
+      if(is_number(v_chr)) then
+        exit;
+      else 
+        v_part_prefix := v_part_prefix || v_chr;
+      end if;
+    end loop;
+    
+    printl('part prefix: ' || v_part_prefix);    
+
+    return trim(v_part_prefix);
+  end;
+
+  function to_date(piv_str long) return date
+  is
+    v_col   varchar2(1000);
+    v_date  date;
+  begin
+    
+    v_col := case length(piv_str) 
+      when 4 then 'to_date('''||piv_str||''',''yyyy'')'   
+      when 6 then 'to_date('''||piv_str||''',''yyyymm'')'
+      when 8 then 'to_date('''||piv_str||''',''yyyymmdd'')'
+      else piv_str 
+    end;
+
+    gv_sql := 'select '||v_col||' from dual';
+    execute immediate gv_sql into v_date; 
+    return v_date;
+  end;
+
+  function find_next_high_value(piv_col_data_type varchar2, piv_range_type char, piv_prev_high_val long) return long
+  is
+    v_high_date date;
+  begin
+
+    v_high_date := to_date(piv_prev_high_val);
+
+    if piv_range_type = 'd' then 
+      v_high_date := v_high_date + 1;
+    else
+      v_high_date := add_months(v_high_date,1);
+    end if;  
+
+    if piv_col_data_type = 'DATE' then return date_string(v_high_date); end if;
+
+    return to_char(v_high_date, 
+      case piv_range_type 
+        when 'd' then 'yyyymmdd' 
+        when 'm' then 'yyyymm'
+        -- :todo implement others 
+      end
+    );    
+
+  end;
+
+
+  function find_partition_range_type(piv_part_name varchar2) return char 
+  is
+    v_part_prefix varchar2(10) := '';
+    v_part_suffix varchar2(10) := '';
+    v_range_type  char(1):= 'd';
+  begin
+    v_part_prefix := find_partition_prefix(piv_part_name);
+    v_part_suffix := ltrim(piv_part_name, v_part_prefix);
+    v_range_type  := case length(v_part_suffix) when 4 then 'y' when 4 then 'm' else 'd' end;
+    return v_range_type;
+  end;
+
+  function find_partition_range_type(piv_owner varchar2, piv_table varchar2) return char
+  is
+    v_part_name varchar2(100);
+  begin
+    gv_sql := '
+      select partition_name from all_tab_partitions 
+      where 
+        owner = '''||upper(piv_owner) ||''' and
+        table_name = '''||upper(piv_owner) ||''' and
+        rownum = 1
+    ';
+    execute immediate gv_sql into v_part_name;
+    return find_partition_range_type(v_part_name);   
+  end;
 
   -- Splits string by separator.
   -- Arguments: 
@@ -249,6 +364,7 @@ as
     v_cnt  number := 0;
     v_partition_name varchar2(100);
     v_part_date_format varchar2(8);
+    v_range_type  char(1):= 'd';
   begin
     gv_sql := '
       select count(1)
@@ -258,6 +374,8 @@ as
         table_owner = upper('''||piv_owner||''')
     ';
     execute immediate gv_sql into v_cnt;
+
+    v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
     if v_cnt = 0 then
       raise partition_not_found;
@@ -300,7 +418,7 @@ as
   procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_date number, pin_num_part number)
   is
     v_range_type  char(1):= 'd';
-    v_max_date    number(8) := pin_date;
+    v_max_date    varchar2(8) := pin_date;
     i number := 0;
   begin
     
@@ -309,13 +427,13 @@ as
     
     v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
-    while i < pid_num_part
+    while i < pin_num_part
     loop 
 
       v_max_date := case v_range_type
-        when 'd' then to_char(to_date(v_max_date,'yyyymmdd')-1, 'yyyymmdd')
-        when 'm' then to_char(add_months(to_date(v_max_date,'yyyymmdd'),-1),'yyyymm')
-        when 'y' then to_char(add_months(to_date(v_max_date,'yyyymmdd'),-12),'yyyymm')
+        when 'd' then to_char(to_date(v_max_date)-1,'yyyymmdd')
+        when 'm' then to_char(add_months(to_date(v_max_date),-1),'yyyymm')
+        when 'y' then to_char(add_months(to_date(v_max_date),-12),'yyyy')
       end;
       truncate_partition(piv_owner, piv_table, v_max_date);
 
@@ -333,7 +451,7 @@ as
     -- raises error if partition not found.
     ------------------------------------------------------------------------------
 
-  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_start_date number, pin_end_date number)
+  procedure truncate_partitions_range(piv_owner varchar2, piv_table varchar2, pin_start_date number, pin_end_date number)
   is
     v_num_part number;
     v_range_type  char(1):= 'd';
@@ -344,12 +462,12 @@ as
     v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
     v_num_part := case v_range_type
-        when 'd' then to_date(pin_start_date,'yyyymmdd') - to_date(pin_end_date,'yyyymmdd')
-        when 'm' then months_between(to_date(pin_start_date,'yyyymm'), to_date(pin_end_date,'yyyymm'))
-        when 'y' then ceil(months_between(to_date(pin_start_date,'yyyy'), to_date(pin_end_date,'yyyy')/12))
+        when 'd' then to_date(pin_start_date) - to_date(pin_end_date)
+        when 'm' then months_between(to_date(pin_start_date), to_date(pin_end_date))
+        when 'y' then ceil(months_between(to_date(pin_start_date), to_date(pin_end_date))/12)
       end;
 
-    truncate_partitions(piv_owner, piv_table, pin_date, v_num_part);
+    truncate_partitions(piv_owner, piv_table, pin_start_date, v_num_part);
 
     exception 
     when others then 
@@ -475,101 +593,6 @@ as
       raise;
   end;
 
-
-  function find_partition_prefix(piv_part_name varchar2) return varchar2
-  is
-    v_chr char(2);
-    v_part_prefix varchar2(10) := '';
-  begin
-    
-    printl('v_part_name: ' || piv_part_name);    
-  
-    for i in 1 .. length(piv_part_name) loop
-      v_chr := substr(piv_part_name,i,1);
-      if(is_number(v_chr)) then
-        exit;
-      else 
-        v_part_prefix := v_part_prefix || v_chr;
-      end if;
-    end loop;
-    
-    printl('part prefix: ' || v_part_prefix);    
-
-    return trim(v_part_prefix);
-  end;
-
-  function to_date(piv_str long) return date
-  is
-    v_col   varchar2(1000);
-    v_date  date;
-  begin
-    
-    v_col := case length(piv_str) 
-      when 4 then 'to_date('''||piv_str||''',''yyyy'')'   
-      when 6 then 'to_date('''||piv_str||''',''yyyymm'')'
-      when 8 then 'to_date('''||piv_str||''',''yyyymmdd'')'
-      else piv_str 
-    end;
-
-    gv_sql := 'select '||v_col||' from dual';
-    execute immediate gv_sql into v_date; 
-    return v_date;
-  end;
-
-  function find_next_high_value(piv_col_data_type varchar2, piv_range_type char, piv_prev_high_val long) return long
-  is
-    v_high_date date;
-  begin
-
-    v_high_date := to_date(piv_prev_high_val);
-
-    if piv_range_type = 'd' then 
-      v_high_date := v_high_date + 1;
-    else
-      v_high_date := add_months(v_high_date,1);
-    end if;  
-
-    if piv_col_data_type = 'DATE' then return date_string(v_high_date); end if;
-
-    return to_char(v_high_date, 
-      case piv_range_type 
-        when 'd' then 'yyyymmdd' 
-        when 'm' then 'yyyymm'
-        -- :todo implement others 
-      end
-    );    
-
-  end;
-
-
-  function find_partition_range_type(piv_part_name varchar2) return char 
-  is
-    v_part_prefix varchar2(10) := '';
-    v_part_suffix varchar2(10) := '';
-    v_range_type  char(1):= 'd';
-  begin
-    v_part_prefix := find_partition_prefix(piv_part_name);
-    v_part_suffix := ltrim(piv_part_name, v_part_prefix);
-    v_range_type  := case length(v_part_suffix) when 4 then 'y' when 4 then 'm' else 'd' end;
-    return v_range_type;
-  end;
-
-  function find_partition_range_type(piv_owner varchar2, piv_table varchar2) return char
-  is
-    v_part_name varchar2(100);
-  begin
-    gv_sql := '
-      select partition_name from all_tab_partitions 
-      where 
-        owner = '''||upper(piv_owner) ||''' and
-        table_name = '''||upper(piv_owner) ||''' and
-        rownum = 1
-    ';
-    execute immediate gv_sql into v_part_name;
-    return find_partition_range_type(v_part_name);   
-  end;
-
-
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date)
   is
     v_part long := find_max_partition(piv_owner, piv_table);
@@ -674,31 +697,6 @@ as
     add_partitions(piv_owner,piv_table,pid_date);
     drop_partition_lt(piv_owner,piv_table, pid_date-pin_window_size);
   end;  
-
-
-
-  ------------------------------------------------------------------------------
-  -- check if table exists
-  ------------------------------------------------------------------------------
-  function table_exists(piv_owner varchar2, piv_table varchar2) return boolean
-  IS
-    v_proc varchar2(1000) := gv_package || '.table_exists';
-    v_cnt  number := 0;
-  begin
-
-    gv_sql := '
-      select count(1)
-      from all_tables
-      where table_name = upper ('''||piv_table||''') and owner = upper ('''||piv_owner||''')
-    ';
-    execute immediate gv_sql into v_cnt;
-    return case v_cnt when 0 then false else true end; 
-
-  exception
-    when others then
-      logger.error(SQLERRM, gv_sql);
-      raise;
-  end;
 
   procedure gather_table_stats(piv_owner varchar2, piv_table varchar2, piv_part_name varchar2 default null) 
   is
