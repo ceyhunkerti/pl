@@ -333,7 +333,7 @@ as
     -- raises error if partition not found.
     ------------------------------------------------------------------------------
 
-  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_date number, pin_pdate number)
+  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_start_date number, pin_end_date number)
   is
     v_num_part number;
     v_range_type  char(1):= 'd';
@@ -344,12 +344,18 @@ as
     v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
     v_num_part := case v_range_type
-        when 'd' then pin_date - pin_sdate;
-        when 'm' then pin_date - pin_pdate;
-        when 'y' then pin_date - pin_pdate;
+        when 'd' then to_date(pin_start_date,'yyyymmdd') - to_date(pin_end_date,'yyyymmdd')
+        when 'm' then months_between(to_date(pin_start_date,'yyyymm'), to_date(pin_end_date,'yyyymm'))
+        when 'y' then ceil(months_between(to_date(pin_start_date,'yyyy'), to_date(pin_end_date,'yyyy')/12))
       end;
 
     truncate_partitions(piv_owner, piv_table, pin_date, v_num_part);
+
+    exception 
+    when others then 
+      pl.logger.error(SQLERRM, gv_sql);
+      raise;
+
   end;
 
   ------------------------------------------------------------------------------
