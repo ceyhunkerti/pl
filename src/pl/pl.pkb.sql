@@ -41,6 +41,8 @@ as
   pragma exception_init(table_not_partitioned, -20171);
 
   procedure drop_partition(piv_owner varchar2, piv_table varchar2, pid_date date, piv_operator varchar2 default '<' );
+  function find_partition_col_type(piv_owner varchar2, piv_table varchar2) return varchar2;
+  function find_partition_prefix(piv_part_name varchar2) return varchar2;
 
   -- Splits string by separator.
   -- Arguments: 
@@ -321,7 +323,7 @@ as
   begin
     logger := logtype.init(v_proc);
 
-    v_col_data_type := find_partiotion_col_type(piv_owner, piv_table);
+    v_col_data_type := find_partition_col_type(piv_owner, piv_table);
 
     for c1 in (
       select 
@@ -458,7 +460,7 @@ as
     v_high_value  long;
     v_part_prefix varchar2(10) := '';
     v_range_type  char(1):= 'd';
-    v_partiotion_col_type varchar2(20) := find_partiotion_col_type(piv_owner, piv_table);  
+    v_partiotion_col_type varchar2(20) := find_partition_col_type(piv_owner, piv_table);  
     v_max_date    date;
   begin
     
@@ -514,7 +516,7 @@ as
     gv_proc := gv_package||'.add_partition';
     logger := logtype.init(gv_proc);
 
-    v_partiotion_col_type := find_partiotion_col_type(piv_owner, piv_table);
+    v_partiotion_col_type := find_partition_col_type(piv_owner, piv_table);
     v_last_part   := find_max_partition(piv_owner, piv_table);
     v_part_name   := substr(v_last_part,1,instr(v_last_part,':')-1);
     v_high_value  := ltrim(v_last_part, v_part_name||':');
@@ -734,18 +736,18 @@ as
   end;
 
 
-  procedure async_exec(piv_sql varchar2)
-  is 
-  begin
-    dbms_scheduler.create_job (  
-      name          =>  'ASYNC_EXEC',
-      job_type      =>  'PLSQL_BLOCK',  
-      job_action    =>  'BEGIN ' || piv_sql || ' END;',  
-      start_date    =>  sysdate,  
-      enabled       =>  true,  
-      auto_drop     =>  true
-    ); 
-  end;
+  -- procedure async_exec(piv_sql varchar2)
+  -- is 
+  -- begin
+  --   dbms_scheduler.create_job (  
+  --     name          =>  'ASYNC_EXEC',
+  --     job_type      =>  'PLSQL_BLOCK',  
+  --     job_action    =>  'BEGIN ' || piv_sql || ' END;',  
+  --     start_date    =>  sysdate,  
+  --     enabled       =>  true,  
+  --     auto_drop     =>  true
+  --   ); 
+  -- end;
 
 
   ------------------------------------------------------------------------------
