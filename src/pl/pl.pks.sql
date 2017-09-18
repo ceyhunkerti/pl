@@ -26,6 +26,9 @@ as
   procedure add_partitions(piv_owner varchar2, piv_table varchar2,pid_date date);
   procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date);
   procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2);
+  procedure truncate_partition(piv_owner varchar2, piv_table varchar2, pin_date number);
+  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_date date, pin_num_part number);
+  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_start_date number, pin_end_date number);
   procedure drop_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2);
   procedure drop_partition_lt (piv_owner varchar2, piv_table varchar2, pid_date date);  
   procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date);  

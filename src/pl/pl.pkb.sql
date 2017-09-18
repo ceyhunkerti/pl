@@ -241,68 +241,117 @@ as
   end;
   
     ------------------------------------------------------------------------------
+  -- truncates given partition, raises error if partition not found.
+  ------------------------------------------------------------------------------
+  procedure truncate_partition(piv_owner varchar2, piv_table varchar2, pin_date number)
+  is
+    v_proc varchar2(1000) := gv_package || '.truncate_partition';
+    v_cnt  number := 0;
+    v_partition_name varchar2(100);
+    v_part_date_format varchar2(8);
+  begin
+    gv_sql := '
+      select count(1)
+      from all_tab_partitions
+      where 
+        table_name = upper('''||piv_table||''') and 
+        table_owner = upper('''||piv_owner||''')
+    ';
+    execute immediate gv_sql into v_cnt;
+
+    if v_cnt = 0 then
+      raise partition_not_found;
+    else 
+      v_part_date_format := case v_range_type
+        when 'd' then 'yyyymmdd'
+        when 'm' then 'yyyymm'
+        when 'y' then 'yyyy'
+      end;
+      gv_sql := '
+        select partition_name
+          from all_tab_partitions
+          where table_name = upper('''||piv_table||''') and 
+        table_owner = upper('''||piv_owner||''')      and
+        to_char(high_value,'''||v_part_date_format||''') = '''||pin_date||''') 
+    ';
+      execute immediate gv_sql into v_partition_name;
+      gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' truncate partition '||v_partition_name;
+      execute immediate gv_sql;
+      logger.success( ' partition '||v_partition_name||' truncated', gv_sql);
+    end if;
+  
+  exception 
+    when partition_not_found then
+      logger.error(v_proc||' partition for '||pin_date||' not found!', gv_sql);
+      raise_application_error (
+        -20170,
+        v_proc||' partition for '||pin_date||' not found!'
+      );
+    when others then 
+      logger.error(SQLERRM, gv_sql);
+      raise;
+  end;
+  
+    ------------------------------------------------------------------------------
     -- truncates given partitions starting from date through number of patitions,
     -- raises error if partition not found.
     ------------------------------------------------------------------------------
 
-    PROCEDURE truncate_partitions (piv_owner       VARCHAR2,
-                                   piv_table       VARCHAR2,
-                                   pid_date        DATE,
-                                   pid_num_part    NUMBER)
-    IS
-        v_part                 LONG := find_max_partition (piv_owner, piv_table);
-        v_part_name            VARCHAR2 (50);
-        v_high_value           LONG;
-        v_part_prefix          VARCHAR2 (10) := '';
-        v_range_type           CHAR (1) := 'd';
-        v_partition_col_type   VARCHAR2 (20)
-            := find_partition_col_type (piv_owner, piv_table);
-        v_max_date             DATE;
-    BEGIN
-        gv_proc := 'pl.truncate_partitions';
-        logger := logtype.init (gv_proc);
+  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_date number, pin_num_part number)
+  is
+    v_range_type  char(1):= 'd';
+    v_max_date    number(8) := pin_date;
+    i number := 0;
+  begin
+    
+    gv_proc   := 'pl.truncate_partitions'; 
+    logger := logtype.init(gv_proc);
+    
+    v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
-        v_part_name := SUBSTR (v_part, 1, INSTR (v_part, ':') - 1);
-        v_part_prefix := find_partition_prefix (v_part_name);
-        v_high_value := LTRIM (v_part, v_part_name || ':');
-        v_range_type := find_partition_range_type (v_part_name);
+    while i < pid_num_part
+    loop 
 
-        IF v_partition_col_type = 'DATE'
-        THEN
-            gv_sql := 'select ' || v_high_value || ' from dual';
-        ELSIF v_range_type = 'm'
-        THEN
-            gv_sql :=
-                   'select to_date('
-                || TO_CHAR (v_high_value)
-                || ',''yyyymm'') from dual';
-        ELSIF v_range_type = 'd'
-        THEN
-            gv_sql :=
-                   'select to_date('
-                || TO_CHAR (v_high_value)
-                || ',''yyyymmdd'') from dual';
-        END IF;
+      v_max_date := case v_range_type
+        when 'd' then to_char(to_date(v_max_date,'yyyymmdd')-1, 'yyyymmdd')
+        when 'm' then to_char(add_months(to_date(v_max_date,'yyyymmdd'),-1),'yyyymm')
+        when 'y' then to_char(add_months(to_date(v_max_date,'yyyymmdd'),-12),'yyyymm')
+      end;
+      truncate_partition(piv_owner, piv_table, v_max_date);
 
-        EXECUTE IMMEDIATE gv_sql INTO v_max_date;
+      i := i + 1;
+    end loop;
 
-        LOOP
-            v_max_date :=
-                CASE v_range_type
-                    WHEN 'd' THEN v_max_date + 1
-                    WHEN 'm' THEN ADD_MONTHS (v_max_date, 1)
-                    WHEN 'y' THEN ADD_MONTHS (v_max_date, 12)
-                END;
-            truncate_partition (piv_owner, piv_table, v_max_date);
+  exception 
+  when others then 
+    pl.logger.error(SQLERRM, gv_sql);
+    raise;
+  end;
 
-            EXIT WHEN v_max_date > pid_date;
-        END LOOP;
-    EXCEPTION
-        WHEN OTHERS
-        THEN
-            pl.logger.error (SQLERRM, gv_sql);
-            RAISE;
-    END;
+    ------------------------------------------------------------------------------
+    -- truncates given partitions starting from date through number of patitions,
+    -- raises error if partition not found.
+    ------------------------------------------------------------------------------
+
+  procedure truncate_partitions(piv_owner varchar2, piv_table varchar2, pin_date number, pin_pdate number)
+  is
+    v_num_part number;
+    v_range_type  char(1):= 'd';
+  begin
+    gv_proc   := 'pl.truncate_partitions'; 
+    logger := logtype.init(gv_proc);
+
+    v_range_type  := find_partition_range_type(piv_owner, piv_table); 
+
+    v_num_part := case v_range_type
+        when 'd' then pin_date - pin_sdate;
+        when 'm' then pin_date - pin_pdate;
+        when 'y' then pin_date - pin_pdate;
+      end;
+
+    truncate_partitions(piv_owner, piv_table, pin_date, v_num_part);
+  end;
+
   ------------------------------------------------------------------------------
   -- drops given partition
   ------------------------------------------------------------------------------
@@ -495,7 +544,7 @@ as
   begin
     v_part_prefix := find_partition_prefix(piv_part_name);
     v_part_suffix := ltrim(piv_part_name, v_part_prefix);
-    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end;
+    v_range_type  := case length(v_part_suffix) when 4 then 'y' when 4 then 'm' else 'd' end;
     return v_range_type;
   end;
 
