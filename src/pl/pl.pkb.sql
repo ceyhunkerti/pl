@@ -212,10 +212,10 @@ as
   begin
     gv_sql := '
       select count(1)
-      from all_tables
+      from all_tab_partitions
       where 
         table_name = upper('''||piv_table||''') and 
-        owner = upper('''||piv_owner||''')      and
+        table_owner = upper('''||piv_owner||''')      and
         partition_name = upper('''||piv_partition||''') 
     ';
     execute immediate gv_sql into v_cnt;
@@ -240,7 +240,69 @@ as
       raise;
   end;
   
+    ------------------------------------------------------------------------------
+    -- truncates given partitions starting from date through number of patitions,
+    -- raises error if partition not found.
+    ------------------------------------------------------------------------------
 
+    PROCEDURE truncate_partitions (piv_owner       VARCHAR2,
+                                   piv_table       VARCHAR2,
+                                   pid_date        DATE,
+                                   pid_num_part    NUMBER)
+    IS
+        v_part                 LONG := find_max_partition (piv_owner, piv_table);
+        v_part_name            VARCHAR2 (50);
+        v_high_value           LONG;
+        v_part_prefix          VARCHAR2 (10) := '';
+        v_range_type           CHAR (1) := 'd';
+        v_partition_col_type   VARCHAR2 (20)
+            := find_partition_col_type (piv_owner, piv_table);
+        v_max_date             DATE;
+    BEGIN
+        gv_proc := 'pl.truncate_partitions';
+        logger := logtype.init (gv_proc);
+
+        v_part_name := SUBSTR (v_part, 1, INSTR (v_part, ':') - 1);
+        v_part_prefix := find_partition_prefix (v_part_name);
+        v_high_value := LTRIM (v_part, v_part_name || ':');
+        v_range_type := find_partition_range_type (v_part_name);
+
+        IF v_partition_col_type = 'DATE'
+        THEN
+            gv_sql := 'select ' || v_high_value || ' from dual';
+        ELSIF v_range_type = 'm'
+        THEN
+            gv_sql :=
+                   'select to_date('
+                || TO_CHAR (v_high_value)
+                || ',''yyyymm'') from dual';
+        ELSIF v_range_type = 'd'
+        THEN
+            gv_sql :=
+                   'select to_date('
+                || TO_CHAR (v_high_value)
+                || ',''yyyymmdd'') from dual';
+        END IF;
+
+        EXECUTE IMMEDIATE gv_sql INTO v_max_date;
+
+        LOOP
+            v_max_date :=
+                CASE v_range_type
+                    WHEN 'd' THEN v_max_date + 1
+                    WHEN 'm' THEN ADD_MONTHS (v_max_date, 1)
+                    WHEN 'y' THEN ADD_MONTHS (v_max_date, 12)
+                END;
+            truncate_partition (piv_owner, piv_table, v_max_date);
+
+            EXIT WHEN v_max_date > pid_date;
+        END LOOP;
+    EXCEPTION
+        WHEN OTHERS
+        THEN
+            pl.logger.error (SQLERRM, gv_sql);
+            RAISE;
+    END;
   ------------------------------------------------------------------------------
   -- drops given partition
   ------------------------------------------------------------------------------
