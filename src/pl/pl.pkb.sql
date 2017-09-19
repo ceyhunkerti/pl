@@ -151,8 +151,8 @@ as
     gv_sql := '
       select partition_name from all_tab_partitions 
       where 
-        owner = '''||upper(piv_owner) ||''' and
-        table_name = '''||upper(piv_owner) ||''' and
+        table_owner = '''||upper(piv_owner) ||''' and
+        table_name = '''||upper(piv_table) ||''' and
         rownum = 1
     ';
     execute immediate gv_sql into v_part_name;
