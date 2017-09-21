@@ -475,6 +475,18 @@
     ```
 
 
+  * **print_locked**
+
+    ```sql
+      procedure print_locked
+    ```
+
+    ```sql
+    Print locked objects.
+    ```
+
+
+
   * **println**
 
     ```sql
