@@ -475,10 +475,10 @@
     ```
 
 
-  * **print_locked**
+  * **print_locks**
 
     ```sql
-      procedure print_locked
+      procedure print_locks
     ```
 
     ```sql

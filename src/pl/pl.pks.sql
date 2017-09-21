@@ -50,7 +50,7 @@ as
 
 --  procedure async_exec(piv_sql varchar2);
 
-  procedure print_locked; 
+  procedure print_locks; 
 
 
   procedure println(piv_message varchar2);

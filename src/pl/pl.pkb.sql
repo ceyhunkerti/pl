@@ -865,7 +865,7 @@ as
   -- end;
 
 
-  procedure print_locked
+  procedure print_locks
   is
   begin
 
