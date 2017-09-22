@@ -515,6 +515,37 @@
     (boolean): true if param exists false otherwise
   ```
 
+  * **param_exists**
+    ```sql
+      procedure param_exists(i_name varchar2)
+    ```
+
+    ```sql
+      Check whether given parameter exists.
+
+      Arguments: 
+        [i_name] (varchar2): parameter name 
+      Returns
+        (boolean): true if param exists false otherwise
+    ```
+
+  * **send_mail**
+
+    ```sql
+      procedure send_mail(
+        i_to      varchar2,
+        i_subject varchar2,
+        i_body    varchar2,
+        i_cc      varchar2  default null
+        i_from    varchar2  default null
+      )
+    ```
+
+    ```sql
+      Send mail to given recipients. Set mail server settings on `params` before
+      using this method!
+    ```
+
   * **print_locks**
 
     ```sql
