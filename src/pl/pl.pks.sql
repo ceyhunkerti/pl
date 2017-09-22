@@ -53,6 +53,13 @@ as
   procedure print_locks; 
 
 
+  ------------------------------------------------------------------------------
+  -- params
+  procedure set_param(i_name varchar2, i_value varchar2);
+  function find_param(i_name varchar2) return varchar2;
+  function param_exists(i_name varchar2) return boolean;
+  ------------------------------------------------------------------------------
+
   procedure println(piv_message varchar2);
   procedure printl(piv_message varchar2);
   procedure p(piv_message varchar2);

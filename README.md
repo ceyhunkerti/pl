@@ -474,11 +474,51 @@
        [piv_sql] (varchar2): Statement to execute 
     ```
 
+  * **set_param**
+    ```sql
+      procedure set_param(i_name varchar2, i_value)
+    ```
+
+    ```sql
+    Set parameter on `params` table
+
+    Arguments: 
+      [i_name] (varchar2): parameter name 
+      [i_value] (varchar2): parameter value
+    ```
+
+  * **find_param**
+    ```sql
+      procedure find_param(i_name varchar2)
+    ```
+
+    ```sql
+    Find given parameter
+
+    Arguments: 
+      [i_name] (varchar2): parameter name 
+    Returns
+      (varchar2): Returns parameter value
+    ```
+
+  * **param_exists**
+  ```sql
+    procedure param_exists(i_name varchar2)
+  ```
+
+  ```sql
+  Check whether given parameter exists.
+
+  Arguments: 
+    [i_name] (varchar2): parameter name 
+  Returns
+    (boolean): true if param exists false otherwise
+  ```
 
   * **print_locks**
 
     ```sql
-      procedure print_locks
+    procedure print_locks
     ```
 
     ```sql

@@ -864,7 +864,9 @@ as
   --   ); 
   -- end;
 
-
+  ------------------------------------------------------------------------------
+  -- print locked objects to dbms output
+  ------------------------------------------------------------------------------
   procedure print_locks
   is
   begin
@@ -873,7 +875,9 @@ as
       select 
         session_id, a.object_id, xidsqn, oracle_username, b.owner owner,
         b.object_name object_name, b.object_type object_type
-      from v$locked_object a, dba_objects b
+      from 
+        v$locked_object a, 
+        dba_objects b
       where xidsqn != 0 and b.object_id = a.object_id
     ) loop
       p('.');
@@ -890,6 +894,67 @@ as
     end loop;
 
   end;
+
+  ------------------------------------------------------------------------------
+  -- params
+  procedure set_param(i_name varchar2, i_value varchar2)
+  is
+    param_is_empty exception;
+    pragma exception_init(param_is_empty, -20270);
+  begin
+
+    if i_name is null or trim(i_name) == '' then
+      raise param_is_empty;
+    end if;
+
+    merge into util.params d 
+    using
+    (
+      select i_name name, i_value value from dual
+    ) s
+    on(upper(s.name) = upper(d.name))
+    when matched then
+    update set d.value = s.value
+    when not matched then
+    insert (name, value) values ( upper(s.name), s.value );
+
+    commit;
+
+  exception
+    when others then
+    rollback;
+    raise;
+  end;
+
+  function find_param(i_name varchar2) return varchar2
+  is
+    v_value varchar2(4000);
+  begin
+    select value into v_value from util.params where upper(name) = upper(i_name); 
+    return v_value;
+
+  exception
+    when no_data_found then
+      return null;
+    when too_many_rows then
+      raise too_many_rows;
+    when others raise;  
+  end;
+
+  function param_exists(i_name varchar2) return boolean
+  is
+    v_value varchar2(4000);
+  begin
+    select value into v_value from util.params where upper(name) = upper(i_name); 
+    return true;
+  exception
+    when no_data_found then
+      return false;
+    when too_many_rows then
+      raise too_many_rows;
+    when others raise;  
+  end;
+  ------------------------------------------------------------------------------
 
 
   ------------------------------------------------------------------------------
