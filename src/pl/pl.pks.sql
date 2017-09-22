@@ -1,7 +1,11 @@
 create or replace package UTIL.pl authid current_user
 as
   logger logtype := logtype.init('anonymous');
-  
+
+  MAIL_HOST varchar2(100) := 'MAIL_HOST';
+  MAIL_PORT varchar2(100) := 'MAIL_PORT';
+  MAIL_FROM varchar2(100) := 'MAIL_FROM';
+
   function is_number(piv_str varchar2) return boolean;
   function split(piv_str varchar2, piv_split varchar2 default ',', pin_limit number default null) return dbms_sql.varchar2_table;
 
@@ -59,6 +63,15 @@ as
   function find_param(i_name varchar2) return varchar2;
   function param_exists(i_name varchar2) return boolean;
   ------------------------------------------------------------------------------
+
+  -- mail
+  procedure send_mail(
+    i_to      varchar2,
+    i_subject varchar2,
+    i_body    varchar2,
+    i_cc      varchar2  default null
+    i_from    varchar2  default null
+  );
 
   procedure println(piv_message varchar2);
   procedure printl(piv_message varchar2);

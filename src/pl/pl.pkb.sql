@@ -955,8 +955,57 @@ as
     when others raise;  
   end;
   ------------------------------------------------------------------------------
+  -- mail
+  procedure send_mail(
+    i_to      varchar2,
+    i_subject varchar2,
+    i_body    varchar2,
+    i_cc      varchar2  default null
+    i_from    varchar2  default null
+  )
+  is
+    v_from varchar2(100) :=  nvl2(i_from, i_from, nvl(find_param(MAIL_FROM), 'pl@bluecolor.io') );
+    v_con  utl_smtp.connection;
+    v_port number := nvl(to_number(find_param(MAIL_PORT)), 25);  
+    v_host varchar2(1000) := nvl(find_param(MAIL_HOST),'localhost');
+    
+    procedure process_rcpt(i_con in out UTL_SMTP.connection, i_list varchar2)
+    as
+      v_rcpts dbms_sql.varchar2_table;
+    begin
+      if trim(i_list) is not null then
+        v_rcpts := split(i_list);
+        for i in 1 .. v_rcpts.count loop
+          UTL_SMTP.rcpt(i_con, trim(v_rcpts(i)));
+        end loop;
+      end if;
+    end;
 
+  begin
 
+    v_con := utl_smtp.open_connection(v_host, 25);
+    utl_smtp.helo(v_con, v_host);
+    utl_smtp.mail(v_con, v_from);
+
+    process_rcpt(v_con, i_to);
+    process_rcpt(v_con, i_cc);
+    
+    utl_smtp.open_data(v_con);
+    utl_smtp.write_data(v_con, 'Date: ' || to_char(sysdate, 'dd-mon-yyyy hh24:mi:ss') || utl_tcp.crlf);
+    utl_smtp.write_data(v_con, 'To: '   || i_to || utl_tcp.crlf);
+    
+    if trim(i_cc) is not null then
+      utl_smtp.write_data(v_con, 'cc: ' || replace(i_cc, ',', ';') || utl_tcp.crlf);
+    end if;
+    
+    utl_smtp.write_data(v_con, 'from: '     || v_from || utl_tcp.crlf);
+    utl_smtp.write_data(v_con, 'subject: '  || i_subject || utl_tcp.crlf);
+    utl_smtp.write_data(v_con, 'reply-to: ' || v_from || utl_tcp.crlf || utl_tcp.crlf);
+  
+    utl_smtp.write_data(v_con, i_body || utl_tcp.crlf || utl_tcp.crlf);
+    utl_smtp.close_data(v_con);
+    utl_smtp.quit(v_con);
+  end;
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
   ------------------------------------------------------------------------------
