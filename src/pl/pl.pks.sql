@@ -73,6 +73,11 @@ as
     i_from    varchar2  default null
   );
 
+
+  -- metadata
+  function ddl(i_name varchar2, i_schema varchar2, i_type varchar2 default 'TABLE') return clob;
+
+
   procedure println(piv_message varchar2);
   procedure printl(piv_message varchar2);
   procedure p(piv_message varchar2);

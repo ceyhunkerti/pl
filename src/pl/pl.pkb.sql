@@ -1006,6 +1006,14 @@ as
     utl_smtp.close_data(v_con);
     utl_smtp.quit(v_con);
   end;
+
+  -- metadata
+  function ddl(i_name varchar2, i_schema varchar2, i_type varchar2 default 'TABLE') return clob
+  is
+  begin
+    return dbms_metadata.get_ddl(i_type, c.i_name ,i_schema);
+  end;
+
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
   ------------------------------------------------------------------------------
