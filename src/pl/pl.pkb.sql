@@ -955,6 +955,8 @@ as
     when others raise;  
   end;
   ------------------------------------------------------------------------------
+  
+  
   -- mail
   procedure send_mail(
     i_to      varchar2,

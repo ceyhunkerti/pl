@@ -505,20 +505,6 @@
     ```sql
       procedure param_exists(i_name varchar2)
     ```
-  
-    ```sql
-    Check whether given parameter exists.
-  
-    Arguments: 
-      [i_name] (varchar2): parameter name 
-    Returns
-      (boolean): true if param exists false otherwise
-    ```
-
-  * **param_exists**
-    ```sql
-      procedure param_exists(i_name varchar2)
-    ```
 
     ```sql
       Check whether given parameter exists.
