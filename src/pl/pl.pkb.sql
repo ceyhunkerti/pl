@@ -72,7 +72,7 @@ as
     v_part_prefix varchar2(10) := '';
   begin
     
-    printl('v_part_name: ' || piv_part_name);    
+    --printl('v_part_name: ' || piv_part_name);    
   
     for i in 1 .. length(piv_part_name) loop
       v_chr := substr(piv_part_name,i,1);
@@ -83,7 +83,7 @@ as
       end if;
     end loop;
     
-    printl('part prefix: ' || v_part_prefix);    
+    --printl('part prefix: ' || v_part_prefix);    
 
     return trim(v_part_prefix);
   end;
@@ -113,7 +113,7 @@ as
 
     v_high_date := to_date(piv_next_high_val);
 
-    if piv_range_type = 'd' then 
+    if piv_range_type in ('d','D') then 
       v_high_date := v_high_date - 1;
     else
       v_high_date := add_months(v_high_date,-1);
@@ -138,10 +138,12 @@ as
 
     v_high_date := to_date(piv_prev_high_val);
 
-    if piv_range_type = 'd' then 
-      v_high_date := v_high_date + 1;
-    else
+    if piv_range_type = 'y' then 
+      v_high_date := add_months(v_high_date,12);
+    elsif piv_range_type = 'm' then 
       v_high_date := add_months(v_high_date,1);
+    else 
+      v_high_date := v_high_date + 1;
     end if;  
 
     if piv_col_data_type = 'DATE' then return date_string(v_high_date); end if;
@@ -150,28 +152,19 @@ as
       case piv_range_type 
         when 'd' then 'yyyymmdd' 
         when 'm' then 'yyyymm'
-        -- :todo implement others 
+        when 'y' then 'yyyy'
       end
     );    
 
   end;
 
-
-  function find_partition_range_type(piv_part_name varchar2) return char 
-  is
-    v_part_prefix varchar2(10) := '';
-    v_part_suffix varchar2(10) := '';
-    v_range_type  char(1):= 'd';
-  begin
-    v_part_prefix := find_partition_prefix(piv_part_name);
-    v_part_suffix := ltrim(piv_part_name, v_part_prefix);
-    v_range_type  := case length(v_part_suffix) when 4 then 'y' when 4 then 'm' else 'd' end;
-    return v_range_type;
-  end;
-
   function find_partition_range_type(piv_owner varchar2, piv_table varchar2) return char
   is
     v_part_name varchar2(100);
+    v_col_data_type varchar2(20)  := 'DATE';
+    v_part_prefix varchar2(10) := '';
+    v_part_suffix varchar2(10) := '';
+    v_range_type  char(1):= 'D';
   begin
     gv_sql := '
       select partition_name from all_tab_partitions 
@@ -181,8 +174,29 @@ as
         rownum = 1
     ';
     --printl(gv_sql);
+    
     execute immediate gv_sql into v_part_name;
-    return find_partition_range_type(v_part_name);   
+    
+    --printl(v_part_name);
+    
+    v_part_prefix := find_partition_prefix(v_part_name);
+    v_part_suffix := ltrim(v_part_name, v_part_prefix);
+    
+    v_col_data_type := find_partition_col_type(piv_owner, piv_table);
+    
+    v_range_type  := case v_col_data_type
+    when 'DATE' then
+        case length(v_part_suffix)
+            when 8 then 'D'
+        end
+    else
+        case length(v_part_suffix)
+            when 4 then 'y'
+            when 6 then 'm'
+            when 8 then 'd'
+        end
+    end; 
+    return v_range_type;   
   end;
 
   -- Splits string by separator.
@@ -217,6 +231,28 @@ as
 
     return v_res;
   end;
+
+  function find_min_partition(piv_owner varchar2, piv_table varchar2) return long
+  is
+    v_part long;
+    v_partition_name varchar2(20);
+    v_high_value varchar2(4000);
+  begin
+
+    select partition_name, high_value into v_partition_name, v_high_value 
+    from
+      (
+        select 
+          partition_name,
+          high_value,
+          row_number() over(partition by table_owner, table_name order by partition_position asc) rank_id 
+        from all_tab_partitions 
+        where table_owner = upper(piv_owner) and table_name = upper(piv_table)
+      )
+    where rank_id = 1;
+
+    return v_partition_name||':'||v_high_value;
+  end;  
 
   function find_max_partition(piv_owner varchar2, piv_table varchar2) return long
   is
@@ -394,6 +430,7 @@ as
     v_partition_col_type varchar2(20);
     v_part_date date;
     v_prev_high_value varchar2(100);
+    v_high_value date;
   begin
     gv_sql := '
       select count(1)
@@ -414,49 +451,48 @@ as
       raise partition_not_found;
     else 
       v_part_date_format := case v_range_type
+        when 'D' then 'yyyymmdd'
         when 'd' then 'yyyymmdd'
         when 'm' then 'yyyymm'
         when 'y' then 'yyyy'
       end;
       
       v_part_date := case v_range_type
+        when 'D' then to_date(pin_date)
         when 'd' then to_date(pin_date)
         when 'm' then to_date(pin_date)
         when 'y' then to_date(pin_date)
       end;
       
-      for c1 in (
-      select 
-        t.partition_name, t.high_value 
-      from 
-        all_tab_partitions t 
-      where 
-        upper(t.table_owner)= upper(piv_owner) and
-        upper(t.table_name) = upper(piv_table)  
-    ) loop
-      --execute immediate 'select '||c1.high_value||' from dual' into v_part_date;
-      --printl(find_prev_high_value(v_partition_col_type, v_range_type, c1.high_value));
-      --printl(find_next_high_value(v_partition_col_type, v_range_type, c1.high_value));
-      v_prev_high_value := find_prev_high_value(v_partition_col_type, v_range_type, c1.high_value);
-      --printl(v_prev_high_value);
-      if to_date(v_prev_high_value) = v_part_date then 
-        v_partition_name := c1.partition_name;
-        printl(v_partition_name);
-        exit;
-      end if;
-    end loop;
-      /*gv_sql := '
-        select partition_name
-          from all_tab_partitions
-          where table_name = upper('''||piv_table||''') and 
-        table_owner = upper('''||piv_owner||''')      and
-        to_char(high_value,'''||v_part_date_format||''') = '''||pin_date||'''
-        ';
-      printl(gv_sql);
-      execute immediate gv_sql into v_partition_name;
-      */
-      --printl(v_partition_name);
+      gv_sql := '
+        SELECT xs.table_owner
+          ,      xs.table_name
+          ,      xs.partition_name
+          ,      xs.high_value
+          FROM   XMLTABLE(''/ROWSET/ROW''
+                          PASSING (SELECT DBMS_XMLGEN.GETXMLTYPE(
+                                             ''SELECT * FROM all_tab_partitions 
+                                                where table_owner='||piv_owner||' and table_name='||piv_owner||' 
+                                             ) FROM dual)
+                          COLUMNS table_owner      VARCHAR2(30) PATH ''TABLE_OWNER'',
+                                  table_name       VARCHAR2(30) PATH ''TABLE_NAME'',
+                                  partition_name   VARCHAR2(30) PATH ''CONSTRAINT_NAME'',
+                                  high_value       VARCHAR2(400)) xs
+          WHERE  high_value=';
+      execute immediate gv_sql into v_high_value;
+
+      --v_prev_high_value := find_prev_high_value(v_partition_col_type, v_range_type, c1.high_value);
+      printl('prev high'||v_prev_high_value);
+      printl('part date'||v_part_date);
+
+    if to_date(v_prev_high_value) = v_part_date then 
+      --v_partition_name := c1.partition_name;
+      --exit;
+      null;
+    end if;
+
       gv_sql := 'alter table '|| piv_owner||'.'||piv_table||' truncate partition '||v_partition_name;
+      printl(gv_sql);
       execute immediate gv_sql;
       logger.success( ' partition '||v_partition_name||' truncated', gv_sql);
     end if;
@@ -483,14 +519,33 @@ as
     v_range_type  char(1):= 'd';
     v_max_date    number(8) := pin_date;
     i number := 0;
+    v_cnt  number;
+    v_num_part number;
   begin
     
     gv_proc   := 'pl.truncate_partitions'; 
     logger := logtype.init(gv_proc);
     
     v_range_type  := find_partition_range_type(piv_owner, piv_table); 
+    
+    gv_sql := '
+      select count(1)
+      from all_tab_partitions
+      where 
+        table_name = upper('''||piv_table||''') and 
+        table_owner = upper('''||piv_owner||''')
+    ';
 
-    while i < pin_num_part
+    execute immediate gv_sql into v_cnt;
+    
+    if v_cnt < pin_num_part 
+        then v_num_part := v_cnt; 
+    else v_num_part := pin_num_part;
+    end if;
+
+    printl(v_num_part);
+    
+    while i < v_num_part
     loop 
 
       v_max_date := case v_range_type
@@ -501,7 +556,8 @@ as
       
       printl(v_max_date);
       truncate_partition(piv_owner, piv_table, v_max_date);
-
+      printl('part name: P'||v_max_date);
+      printl('i: '|| i);
       i := i + 1;
     end loop;
 
@@ -519,23 +575,108 @@ as
   procedure truncate_partitions_range(piv_owner varchar2, piv_table varchar2, pin_start_date number, pin_end_date number)
   is
     v_num_part number;
-    v_range_type  char(1):= 'd';
+    v_range_type  char(1):= 'D';
+    v_high_value  long;
+    v_part long;
+    v_part_date date;
+    v_part_name varchar2(100);
+    v_partition_col_type varchar2(100);
+    v_max_date date;
+    v_min_date date;
   begin
     gv_proc   := 'pl.truncate_partitions'; 
     logger := logtype.init(gv_proc);
 
     v_range_type  := find_partition_range_type(piv_owner, piv_table); 
+    v_partition_col_type := find_partition_col_type(piv_owner, piv_table);
+    
 
-    v_num_part := case v_range_type
-        when 'd' then to_date(pin_end_date) - to_date(pin_start_date) + 1
-        when 'm' then months_between(to_date(pin_end_date), to_date(pin_start_date)) + 1
-        when 'y' then ceil(months_between(to_date(pin_end_date), to_date(pin_start_date))/12) + 1
-        else to_date(pin_end_date) - to_date(pin_start_date)
-      end;
-    printl(v_range_type);
-    printl(v_num_part);
-    truncate_partitions(piv_owner, piv_table, pin_end_date, v_num_part);
+ 
+    --printl(v_range_type);
+    --printl(v_num_part);
+    
+    v_part := find_max_partition(piv_owner, piv_table);
+    v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
+    v_high_value  := ltrim(v_part, v_part_name||':');
+    
+    --printl('done');
+    
+    if v_partition_col_type = 'DATE' then
+      gv_sql := 'select '||v_high_value||' from dual';   
+    elsif v_range_type = 'y' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyy'') from dual';
+    elsif v_range_type = 'm' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymm'') from dual';
+    elsif v_range_type = 'd' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymmdd'') from dual';    
+    end if;
 
+    execute immediate gv_sql into v_max_date;
+    
+    --printl('max date'||v_max_date);
+    
+    v_part := find_min_partition(piv_owner, piv_table);
+    v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
+    v_high_value  := ltrim(v_part, v_part_name||':');
+    
+    if v_partition_col_type = 'DATE' then
+      gv_sql := 'select '||v_high_value||' from dual';   
+    elsif v_range_type = 'y' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyy'') from dual';
+    elsif v_range_type = 'm' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymm'') from dual';
+    elsif v_range_type = 'd' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymmdd'') from dual';    
+    end if;
+
+    execute immediate gv_sql into v_min_date;
+    
+    --printl('min date: '||v_min_date);
+    
+    --v_part_date := pin_end_date;
+    
+    --printl('v_part_date: '||v_part_date);
+    
+    --truncate_partition(piv_owner, piv_table, v_part_date);
+    
+    --printl('done');
+    
+    for c1 in (
+      select 
+        t.partition_name partition_name, t.high_value high_value
+      from 
+        all_tab_partitions t 
+      where 
+        upper(t.table_owner)= upper(piv_owner) and
+        upper(t.table_name) = upper(piv_table)  
+      order by partition_position desc
+    )
+    loop
+        --printl('partition date: ' || v_part_date);
+        
+        gv_sql := 'select '||c1.high_value||' from dual';   
+
+        execute immediate gv_sql into v_part_date;
+        --printl('v_part_date '||v_part_date);
+        --printl('pin_end_date'||pin_end_date);
+        
+        if v_part_date-1 > to_date(pin_end_date) 
+            then continue;
+        elsif v_part_date-1 >= to_date(pin_start_date) then
+            truncate_partition(piv_owner, piv_table, c1.partition_name);
+            printl('part name '||c1.partition_name);
+        else exit;
+        end if;
+        /*v_part_date := case v_range_type
+        when 'D' then to_number(to_char(to_date(v_part_date)-1,'yyyymmdd'))
+        when 'd' then to_char(to_date(v_part_date)-1,'yyyymmdd')
+        when 'm' then to_char(add_months(to_date(v_part_date),-1),'yyyymm')
+        when 'y' then to_char(add_months(to_date(v_part_date),-12),'yyyy')
+        end;
+        
+        exit when v_min_date > to_date(v_part_date);*/
+    end loop;
+    
     exception 
     when others then 
       pl.logger.error(SQLERRM, gv_sql);
@@ -676,11 +817,13 @@ as
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
-    v_high_value  := ltrim(v_part, v_part_name||':');
-    v_range_type  := find_partition_range_type(v_part_name); 
+    v_high_value  := substr(v_part, instr(v_part, ':')+1);
+    v_range_type  := find_partition_range_type(piv_owner, piv_table); 
 
     if v_partition_col_type = 'DATE' then
       gv_sql := 'select '||v_high_value||' from dual';   
+    elsif v_range_type = 'y' then
+      gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyy'') from dual';
     elsif v_range_type = 'm' then
       gv_sql := 'select to_date('|| to_char(v_high_value) ||',''yyyymm'') from dual';
     elsif v_range_type = 'd' then
@@ -692,6 +835,7 @@ as
     loop 
 
       v_max_date := case v_range_type
+        when 'D' then v_max_date + 1
         when 'd' then v_max_date + 1
         when 'm' then add_months(v_max_date,1)
         when 'y' then add_months(v_max_date,12)
@@ -726,18 +870,29 @@ as
     v_partition_col_type := find_partition_col_type(piv_owner, piv_table);
     v_last_part   := find_max_partition(piv_owner, piv_table);
     v_part_name   := substr(v_last_part,1,instr(v_last_part,':')-1);
-    v_high_value  := ltrim(v_last_part, v_part_name||':');
+    v_high_value  := substr(v_last_part,instr(v_last_part,':')+1);
     v_part_prefix := find_partition_prefix(v_part_name);
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
-    v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end; 
-
+    --v_part_name   := substr(v_last_part,1,instr(v_last_part,':')-1);
+    --v_range_type  := case length(v_part_suffix) when 6 then 'm' else 'd' end; 
+    v_range_type  := find_partition_range_type(piv_owner, piv_table);
+    
+    printl(v_range_type);
+    printl(v_last_part);
+    printl(v_part_name);
+    printl(v_high_value);
     v_date := to_date(v_high_value);
-
-    if v_range_type = 'm' then
+    printl(v_date);
+    
+    if v_range_type = 'y' then 
+        v_part_name := v_part_prefix || to_char(v_date, 'yyyy');
+    elsif v_range_type = 'm' then
       v_part_name := v_part_prefix || to_char(v_date, 'yyyymm');
     else 
       v_part_name := v_part_prefix || to_char(v_date, 'yyyymmdd');
     end if;
+    
+    printl(v_part_name);
     
     gv_sql :=  'alter table '||piv_owner||'.'||piv_table||' add partition '|| v_part_name ||
       ' values less than (
