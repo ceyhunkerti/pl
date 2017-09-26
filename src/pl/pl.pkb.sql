@@ -1021,7 +1021,7 @@ as
       for c2 in (select sid, serial#, from v$lock where id2 = c1.xidsqn and sid != c1.session_id) loop
         p('Session: '||c2.sid);
         p('Serial#: '||c2.serial#);
-        p('Hint: alter system kill session '''||c2.sid||','||c2.serial#||''' immediate;')
+        p('Hint: alter system kill session '''||c2.sid||','||c2.serial#||''' immediate;');
       end loop;
 
     end loop;
