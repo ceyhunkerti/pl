@@ -998,6 +998,38 @@ as
 
 
   ------------------------------------------------------------------------------
+  -- print locked objects to dbms output
+  ------------------------------------------------------------------------------
+  procedure print_locks
+  is
+  begin
+
+    for c1 in (
+      select 
+        session_id, a.object_id, xidsqn, oracle_username, b.owner owner,
+        b.object_name object_name, b.object_type object_type
+      from 
+        v$locked_object a, 
+        dba_objects b
+      where xidsqn != 0 and b.object_id = a.object_id
+    ) loop
+      p('.');
+      p('Blocking Session : '   ||c1.session_id);
+      p('Object (Owner/Name): ' ||c1.owner||'.'||c1.object_name);
+      p('Object Type : '        ||c1.object_type);
+
+      for c2 in (select sid, serial#, from v$lock where id2 = c1.xidsqn and sid != c1.session_id) loop
+        p('Session: '||c2.sid);
+        p('Serial#: '||c2.serial#);
+        p('Hint: alter system kill session '''||c2.sid||','||c2.serial#||''' immediate;')
+      end loop;
+
+    end loop;
+
+  end;
+
+
+  ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
   ------------------------------------------------------------------------------
   procedure printl(i_message varchar2)
