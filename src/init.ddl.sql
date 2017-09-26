@@ -1,3 +1,9 @@
+CREATE TABLE params (
+  name  varchar2(100)   primary key,
+  value varchar2(4000),
+  description varchar2(4000)
+);
+
 CREATE TABLE logs (
   name        varchar2(1000),
   log_level   varchar2(20),
@@ -7,3 +13,5 @@ CREATE TABLE logs (
   statement   clob
 ) parallel nologging compress
 ;
+
+

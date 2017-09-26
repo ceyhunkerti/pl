@@ -1,4 +1,4 @@
-CREATE OR REPLACE package body UTIL.pl
+CREATE OR REPLACE package body UTIL.pl_dev
 as
 
   ------------------------------------------------------------------------------
@@ -39,8 +39,6 @@ as
 
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
-
-  function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
 
   ------------------------------------------------------------------------------
   -- check if table exists
