@@ -63,14 +63,14 @@
   * **is_number**
   
     ```sql
-    function is_number(piv_str varchar2) return boolean
+    function is_number(i_str varchar2) return boolean
     ```
 
     ```sql
     Checks if string is classified as a Number or not.
     
     Arguments: 
-       [piv_str='']    (varchar2): The string to check.
+       [i_str='']    (varchar2): The string to check.
     Returns
        (boolean): Returns true if string is numeric.
     ```
@@ -80,9 +80,9 @@
 
     ```sql
     function split(
-      piv_str varchar2, 
-      piv_split varchar2 default ',', 
-      pin_limit number default null
+      i_str varchar2, 
+      i_split varchar2 default ',', 
+      i_limit number default null
     ) return dbms_sql.varchar2_table
     ``` 
 
@@ -90,9 +90,9 @@
       Splits string by separator.
 
       Arguments: 
-         [piv_str='']    (varchar2): The string to split.
-         [piv_split=','] (varchar2): The separator pattern to split by.
-         [pin_limit]     (number): The length to truncate results to.
+         [i_str='']    (varchar2): The string to split.
+         [i_split=','] (varchar2): The separator pattern to split by.
+         [i_limit]     (number): The length to truncate results to.
       Returns
          (varchar2_table): Returns the string segments.
     ```
@@ -101,7 +101,7 @@
   * **date_string**
 
     ```sql
-    function date_string(pid_date date) return varchar2
+    function date_string(i_date date) return varchar2
     ```
 
     ```sql
@@ -109,7 +109,7 @@
     Useful when used with 'execute immediate'
     
     Arguments: 
-       [pid_date] (date): The date object.
+       [i_date] (date): The date object.
     Returns:
        (varchar2): the date function string
        example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
@@ -118,44 +118,44 @@
   * **truncate_table**
 
     ```sql
-    procedure truncate_table(piv_owner varchar2, piv_table varchar2)
+    procedure truncate_table(i_owner varchar2, i_table varchar2)
     ```
 
     ```sql
     Truncates the given table
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     ```
 
   * **drop_table**
 
     ```
-    procedure drop_table(piv_owner varchar2, piv_table varchar2, pib_ignore_err boolean default true);
+    procedure drop_table(i_owner varchar2, i_table varchar2, pib_ignore_err boolean default true);
     ```
 
     ```sql
     Drops the given table
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
        [pib_ignore_err=true] (boolean): when set to false raises error
     ```
 
   * **table_exists**
 
     ```sql
-    function table_exists(piv_owner varchar2, piv_table varchar2) return boolean;
+    function table_exists(i_owner varchar2, i_table varchar2) return boolean;
     ```
 
     ```sql
     Checks whether the given table exists or not 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     Returns:
        (boolean): true if table exists
     ```
@@ -164,86 +164,86 @@
 
     ```sql
     procedure gather_table_stats(
-      piv_owner varchar2, 
-      piv_table varchar2, 
-      piv_part_name varchar2 default null) 
+      i_owner varchar2, 
+      i_table varchar2, 
+      i_part_name varchar2 default null) 
     ```
 
     ```sql
     Gather table/partition statistics 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_part_name] (varchar2): Name of the partition defaults to null
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_part_name] (varchar2): Name of the partition defaults to null
     ```
 
   * **manage_constraints**
 
     ```sql
     procedure manage_constraints(
-      piv_owner varchar2, 
-      piv_table varchar2, 
-      piv_order varchar2 default 'enable') 
+      i_owner varchar2, 
+      i_table varchar2, 
+      i_order varchar2 default 'enable') 
     ```
 
     ```sql
     Enable/Disable constraints for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_order] (varchar2): DISABLE|ENABLE
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_order] (varchar2): DISABLE|ENABLE
     ```  
 
   * **enable_constraints**
 
     ```sql
     procedure enable_constraints(
-      piv_owner varchar2, 
-      piv_table varchar2) 
+      i_owner varchar2, 
+      i_table varchar2) 
     ```
 
     ```sql
     Enable constraints for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     ```
 
   * **disable_constraints**
 
     ```sql
     procedure disable_constraints(
-      piv_owner varchar2, 
-      piv_table varchar2) 
+      i_owner varchar2, 
+      i_table varchar2) 
     ```
 
     ```sql
     Disable constraints for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     ```
 
   * **manage_indexes**
 
     ```sql
     procedure manage_indexes(
-      piv_owner varchar2, 
-      piv_table varchar2, 
-      piv_order varchar2 default 'enable') 
+      i_owner varchar2, 
+      i_table varchar2, 
+      i_order varchar2 default 'enable') 
     ```
 
     ```sql
     Unusable/Rebuild indexes for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_order] (varchar2): DISABLE|ENABLE
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_order] (varchar2): DISABLE|ENABLE
         DISABLE makes the indexes unusable
         ENABLE rebuilds the indexes
     ```  
@@ -252,187 +252,187 @@
 
     ```sql
     procedure enable_indexes(
-      piv_owner varchar2, 
-      piv_table varchar2) 
+      i_owner varchar2, 
+      i_table varchar2) 
     ```
 
     ```sql
     Rebuild indexes for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     ```
 
   * **disable_indexes**
 
     ```sql
     procedure disable_indexes(
-      piv_owner varchar2, 
-      piv_table varchar2) 
+      i_owner varchar2, 
+      i_table varchar2) 
     ```
 
     ```sql
     Make indexes unusable for the given table. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
     ```
 
   * **add_partitions**  
 
     ```sql
-    procedure add_partitions(piv_owner varchar2, piv_table varchar2, pid_date date)
+    procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date)
     ```
 
     ```sql
-    Adds partitions to the given table up to the date given by the 'pid_date' parameter. 
+    Adds partitions to the given table up to the date given by the 'i_date' parameter. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (date): the date up to partitions will be added 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (date): the date up to partitions will be added 
     ```
   
   * **add_partition**
 
     ```sql
-    procedure add_partition (piv_owner varchar2, piv_table varchar2,pid_date date)
+    procedure add_partition (i_owner varchar2, i_table varchar2,i_date date)
     ```
 
     ```sql
-    Adds a single partition to the given table with the date given by the 'pid_date' parameter. 
+    Adds a single partition to the given table with the date given by the 'i_date' parameter. 
     
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (date): the date partition will be created for 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (date): the date partition will be created for 
     ```
 
   * **truncate_partition**
 
     ```
-    procedure truncate_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+    procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
     ```
 
     ```sql
     Truncates the given partition.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_partition] (varchar2): name of the partition 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_partition] (varchar2): name of the partition 
     ```
 
   * **drop_partition**
 
     ```
-    procedure drop_partition(piv_owner varchar2, piv_table varchar2, piv_partition varchar2)
+    procedure drop_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
     ```
 
     ```sql
     Drops the given partition.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_partition] (varchar2): name of the partition 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_partition] (varchar2): name of the partition 
     ```
   
   * **drop_partition_lt**
 
     ```sql
-    procedure drop_partition_lt (piv_owner varchar2, piv_table varchar2, pid_date date); 
+    procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date); 
     ```
 
     ```sql
     Drops partitions less than the given date.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (varchar2): date boundary 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (varchar2): date boundary 
     ```
 
 
   * **drop_partition_lte**
   
     ```sql
-    procedure drop_partition_lte(piv_owner varchar2, piv_table varchar2, pid_date date)
+    procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date)
     ```
 
     ```sql
     Drops partitions less than or equal to the given date.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (varchar2): date boundary 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (varchar2): date boundary 
     ```
 
 
   * **drop_partition_gt**
 
     ```sql
-    procedure drop_partition_gt (piv_owner varchar2, piv_table varchar2, pid_date date)
+    procedure drop_partition_gt (i_owner varchar2, i_table varchar2, i_date date)
     ```
 
     ```sql
     Drops partitions greater than the given date.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (varchar2): date boundary 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (varchar2): date boundary 
     ```
 
   
   * **drop_partition_gte**
 
     ```sql
-    procedure drop_partition_gte (piv_owner varchar2, piv_table varchar2, pid_date date)
+    procedure drop_partition_gte (i_owner varchar2, i_table varchar2, i_date date)
     ```
 
     ```sql
     Drops partitions greater than or equal to the given date.
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (varchar2): date boundary 
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (varchar2): date boundary 
     ```
 
   * **window_partitions**
 
     ```sql
     procedure window_partitions(
-      piv_owner varchar2, 
-      piv_table varchar2, 
-      pid_date date, 
-      pin_window_size number)
+      i_owner varchar2, 
+      i_table varchar2, 
+      i_date date, 
+      i_window_size number)
     ```
 
     ```sql
-    Manages partitions for the given table by fitting the partitions to the given date with pid_date parameter
-    and given number by pin_number_size parameter. Basically it adds partitions until pid_date and drops partitions
-    older than pin_window_size * (year|month|day)
+    Manages partitions for the given table by fitting the partitions to the given date with i_date parameter
+    and given number by i_number_size parameter. Basically it adds partitions until i_date and drops partitions
+    older than i_window_size * (year|month|day)
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [pid_date] (varchar2): date boundary 
-       [pin_window_size] (number): number of partitions to keep
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_date] (varchar2): date boundary 
+       [i_window_size] (number): number of partitions to keep
     ```
 
   * **exchange_partition**
 
     ```sql
       procedure exchange_partition(
-        piv_owner     varchar2, 
-        piv_table_1   varchar2, 
-        piv_part_name varchar2,
-        piv_table_2   varchar2,
+        i_owner     varchar2, 
+        i_table_1   varchar2, 
+        i_part_name varchar2,
+        i_table_2   varchar2,
         pib_validate  boolean default false
       );
     ```
@@ -441,10 +441,10 @@
     Exchanges partition of table_1 with the table_2
 
     Arguments: 
-       [piv_owner] (varchar2): Schema of the table
-       [piv_table] (varchar2): Name of the table
-       [piv_part_name] (varchar2): partitions to be exchanged 
-       [piv_table_2] (varchar2): table to replace partition
+       [i_owner] (varchar2): Schema of the table
+       [i_table] (varchar2): Name of the table
+       [i_part_name] (varchar2): partitions to be exchanged 
+       [i_table_2] (varchar2): table to replace partition
        [pib_validate=false] (boolean): validate partition after exchange
     ```
 
@@ -473,14 +473,15 @@
   * **async_exec**
 
     ```sql
-      procedure async_exec(piv_sql varchar2)
+      procedure async_exec(i_sql varchar2, i_name varchar2 default 'ASYNC_EXEC')
     ```
 
     ```sql
     Execute given statement asynchronously.
 
     Arguments: 
-       [piv_sql] (varchar2): Statement to execute 
+       [i_sql] (varchar2): Statement to execute 
+       [i_name ='ASYNC_EXEC'] (varchar2): Name of the dbms job entry
     ```
 
   * **set_param**
@@ -556,52 +557,52 @@
   * **println**
 
     ```sql
-    procedure println(piv_message varchar2);
+    procedure println(i_message varchar2);
     ```
 
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
     Arguments: 
-       [piv_message] (varchar2): Message to print
+       [i_message] (varchar2): Message to print
     ```
 
 
   * **printl**
 
     ```sql
-    procedure printl(piv_message varchar2);
+    procedure printl(i_message varchar2);
     ```
 
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
     Arguments: 
-       [piv_message] (varchar2): Message to print
+       [i_message] (varchar2): Message to print
     ```    
 
   * **p**
 
     ```sql
-    procedure p(piv_message varchar2);
+    procedure p(i_message varchar2);
     ```
 
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
     Arguments: 
-       [piv_message] (varchar2): Message to print
+       [i_message] (varchar2): Message to print
     ```    
 
   * **print**
 
     ```sql
-    procedure print(piv_message varchar2);
+    procedure print(i_message varchar2);
     ```
 
     ```sql
     Print to dbms out. Shortcut for dbms_output.put
 
     Arguments: 
-       [piv_message] (varchar2): Message to print
+       [i_message] (varchar2): Message to print
     ```    
