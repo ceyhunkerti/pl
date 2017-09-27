@@ -1,7 +1,11 @@
 CREATE OR REPLACE package UTIL.pl authid current_user
 as
   logger logtype := logtype.init('anonymous');
-  
+
+  procedure sleep(i_millis in number) 
+    as language java name 'java.lang.Thread.sleep(long)'; 
+
+
   function is_number(i_str varchar2) return boolean;
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table;
 
@@ -51,7 +55,7 @@ as
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;
 
-  procedure async_exec(piv_sql varchar2, i_name varchar2 default 'ASYNC_EXEC');
+  procedure async_exec(i_sql varchar2, i_name varchar2 default 'ASYNC_EXEC');
 
   procedure print_locks;
 
@@ -66,4 +70,3 @@ as
   
 
 end;
-/

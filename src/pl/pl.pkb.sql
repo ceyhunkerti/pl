@@ -346,9 +346,9 @@ as
   end;
 
 
-    ------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------
   -- drop table given with schema name, and table name 
-  -- eg. pl.truncate_table('UTIL','LOGS') ignores errors if table not found
+  -- eg. pl.truncate_table('UTIL.LOGS') ignores errors if table not found
   ------------------------------------------------------------------------------
   procedure drop_table(i_table in varchar2, i_ignore_err boolean default true)
   is
@@ -1029,7 +1029,7 @@ as
     dbms_scheduler.create_job (  
       job_name      =>  i_name,
       job_type      =>  'PLSQL_BLOCK',  
-      job_action    =>  'BEGIN ' || piv_sql || ' END;',  
+      job_action    =>  'BEGIN ' || i_sql || ' END;',  
       start_date    =>  sysdate,  
       enabled       =>  true,  
       auto_drop     =>  true

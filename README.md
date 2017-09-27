@@ -60,6 +60,19 @@
 
 ### API
 
+  * **sleep**
+    ```sql
+    procedure sleep(i_millis in number) 
+    ```
+
+    ```sql
+    Sleep given number of milliseconds. !DOES NOT uses dbms_lock
+    
+    Arguments: 
+       [i_millis] (number): milliseconds
+    ```
+
+
   * **is_number**
   
     ```sql
