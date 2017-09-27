@@ -49,9 +49,12 @@ as
   procedure enable_parallel_dml;
   procedure disable_parallel_dml;
 
---  procedure async_exec(piv_sql varchar2);
+  procedure async_exec(piv_sql varchar2, i_name varchar2 default 'ASYNC_EXEC');
 
   procedure print_locks;
+
+  -- todo
+  -- function locks; --pipelined
 
 
   procedure println(i_message varchar2);

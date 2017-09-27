@@ -985,20 +985,20 @@ as
   end;
 
 
-  -- procedure async_exec(piv_sql varchar2)
-  -- is 
-  -- begin
-  --   dbms_scheduler.create_job (  
-  --     name          =>  'ASYNC_EXEC',
-  --     job_type      =>  'PLSQL_BLOCK',  
-  --     job_action    =>  'BEGIN ' || piv_sql || ' END;',  
-  --     start_date    =>  sysdate,  
-  --     enabled       =>  true,  
-  --     auto_drop     =>  true
-  --   ); 
-  -- end;
+  procedure async_exec(i_sql varchar2, i_name varchar2 default 'ASYNC_EXEC')
+  is 
+  begin
+    dbms_scheduler.create_job (  
+      job_name      =>  i_name,
+      job_type      =>  'PLSQL_BLOCK',  
+      job_action    =>  'BEGIN ' || piv_sql || ' END;',  
+      start_date    =>  sysdate,  
+      enabled       =>  true,  
+      auto_drop     =>  true
+    ); 
+  end;
 
-
+  
   ------------------------------------------------------------------------------
   -- print locked objects to dbms output
   ------------------------------------------------------------------------------
