@@ -1,4 +1,4 @@
-CREATE OR REPLACE package UTIL.pl_dev authid current_user
+CREATE OR REPLACE package UTIL.pl authid current_user
 as
   logger logtype := logtype.init('anonymous');
   

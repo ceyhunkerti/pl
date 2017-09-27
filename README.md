@@ -30,6 +30,11 @@
       GRANT SELECT ON dba_constraints TO util;
       
       GRANT SELECT ON dba_indexes TO util;
+
+      GRANT SELECT ON dba_objects TO util;
+
+      GRANT SELECT ON v$locked_object TO util;
+
     ```
 
   * Run the contents of [logs.ddl.sql](src/logtype/logs.ddl.sql)
@@ -46,6 +51,10 @@
       grant execute on util.logtype to public;
 
       grant execute on util.pl to public;
+
+      GRANT SELECT ON v$lock TO util;
+
+      GRANT SELECT ON v$session  TO util;
     ```
 
 

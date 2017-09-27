@@ -1,4 +1,4 @@
-CREATE OR REPLACE package body UTIL.pl_dev
+CREATE OR REPLACE package body UTIL.pl
 as
 
   ------------------------------------------------------------------------------
@@ -39,6 +39,8 @@ as
 
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
+  
+  function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
 
   ------------------------------------------------------------------------------
   -- check if table exists
@@ -1001,7 +1003,7 @@ as
   -- print locked objects to dbms output
   ------------------------------------------------------------------------------
   procedure print_locks
-  is
+  IS
   begin
 
     for c1 in (
@@ -1018,7 +1020,7 @@ as
       p('Object (Owner/Name): ' ||c1.owner||'.'||c1.object_name);
       p('Object Type : '        ||c1.object_type);
 
-      for c2 in (select sid, serial#, from v$lock where id2 = c1.xidsqn and sid != c1.session_id) loop
+      for c2 in (select t2.sid, t2.serial# from v$lock t1, v$session t2  where t1.sid = t2.sid AND id2 = c1.xidsqn and t1.sid != c1.session_id) loop
         p('Session: '||c2.sid);
         p('Serial#: '||c2.serial#);
         p('Hint: alter system kill session '''||c2.sid||','||c2.serial#||''' immediate;');
@@ -1061,4 +1063,3 @@ as
 
 
 end;
-/
