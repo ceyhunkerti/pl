@@ -10,7 +10,9 @@ as
   
   function table_exists(i_owner varchar2, i_table varchar2) return boolean;
 
+  procedure truncate_table(i_table varchar2);
   procedure truncate_table(i_owner varchar2, i_table varchar2);
+  procedure drop_table(i_table in varchar2, i_ignore_err boolean default true);
   procedure drop_table(i_owner varchar2, i_table varchar2, i_ignore_err boolean default true);
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null);
   procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE');

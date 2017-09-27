@@ -308,6 +308,25 @@ as
     return replace(i_string, '''', '''''');
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- truncate table given with schema name, and table name 
+  -- eg. pl.truncate_table('UTIL.LOGS')
+  ------------------------------------------------------------------------------
+  procedure truncate_table(i_table in varchar2)
+  is
+    v_proc varchar2(1000) := gv_package || '.truncate_table';
+  begin
+    logger := logtype.init(v_proc);
+    gv_sql := 'truncate table ' || i_table;
+    execute immediate gv_sql;
+    logger.success(i_table|| ' truncated', gv_sql);
+  exception 
+    when others then
+      logger.error(SQLERRM, gv_sql);
+      raise;
+  end;
+
   ------------------------------------------------------------------------------
   -- truncate table given with schema name, and table name 
   -- eg. pl.truncate_table('UTIL','LOGS')
@@ -324,6 +343,25 @@ as
     when others then
       logger.error(SQLERRM, gv_sql);
       raise;
+  end;
+
+
+    ------------------------------------------------------------------------------
+  -- drop table given with schema name, and table name 
+  -- eg. pl.truncate_table('UTIL','LOGS') ignores errors if table not found
+  ------------------------------------------------------------------------------
+  procedure drop_table(i_table in varchar2, i_ignore_err boolean default true)
+  is
+    v_proc varchar2(1000) := gv_package || '.drop_table';
+  begin
+    logger := logtype.init(v_proc);
+    gv_sql := 'drop table '|| i_table;
+    execute immediate gv_sql;
+    logger.success(i_table|| ' dropped', gv_sql);
+  exception 
+    when others then
+      logger.error(SQLERRM, gv_sql);
+      if i_ignore_err = false then raise; end if;
   end;
 
 
