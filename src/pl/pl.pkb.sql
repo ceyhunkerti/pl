@@ -199,12 +199,12 @@ as
   begin
     loop
       i := i + 1;
-      v_str := ltrim(i_str, i_split);
+      v_str := ltrim(v_str, i_split);
       if v_str is not null and instr(v_str,i_split) > 0 then
         v_res(i) := substr(v_str,1,instr(v_str,i_split)-1);
-        v_str := ltrim(v_str, v_res(i));
+        v_str := substr(v_str, instr(v_str,i_split)+1 );
       else
-        if  length(v_str) > 0 then
+        if length(v_str) > 0 then
           v_res(i) := v_str;
         end if;
         exit;
