@@ -1046,24 +1046,20 @@ as
 
     for c1 in (
       select 
-        session_id, a.object_id, xidsqn, oracle_username, b.owner owner,
+        session_id, serial#, a.object_id, xidsqn, oracle_username, b.owner owner,
         b.object_name object_name, b.object_type object_type
       from 
         v$locked_object a, 
-        dba_objects b
-      where xidsqn != 0 and b.object_id = a.object_id
+        dba_objects b,
+        v$session s
+      where xidsqn != 0 and b.object_id = a.object_id and s.sid = session_id
     ) loop
       p('.');
-      p('Blocking Session : '   ||c1.session_id);
+      p('Session            : ' ||c1.session_id);
+      p('Serial#            : ' ||c1.serial#);
       p('Object (Owner/Name): ' ||c1.owner||'.'||c1.object_name);
-      p('Object Type : '        ||c1.object_type);
-
-      for c2 in (select t2.sid, t2.serial# from v$lock t1, v$session t2  where t1.sid = t2.sid AND id2 = c1.xidsqn and t1.sid != c1.session_id) loop
-        p('Session: '||c2.sid);
-        p('Serial#: '||c2.serial#);
-        p('Hint: alter system kill session '''||c2.sid||','||c2.serial#||''' immediate;');
-      end loop;
-
+      p('Object Type        : ' ||c1.object_type);
+      p('Hint: alter system kill session '''||c1.sid||','||c1.serial#||''' immediate;');
     end loop;
 
   end;
