@@ -1083,9 +1083,6 @@ as
     dbms_output.put_line(i_message);
   end;
 
-  ------------------------------------------------------------------------------
-  -- for those who struggels to remember dbmsoutput.put! :) like me
-  ------------------------------------------------------------------------------
   procedure print(i_message varchar2)
   is
   begin
