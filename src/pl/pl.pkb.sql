@@ -42,6 +42,41 @@ as
   
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
 
+
+  function parse_date (i_str varchar2) return date
+  as
+    v_result date;
+    function try_parse_date (i_str in varchar2,i_date_format in varchar2) return date
+    as
+      v_result date;
+    begin
+      begin
+        v_result := to_date(i_str, i_date_format);
+      exception
+        when others then
+          v_result:=null;
+      end;
+      return v_result;
+    end try_parse_date;
+  begin
+
+    -- note: Oracle handles separator characters (comma, dash, slash) interchangeably,
+    --       so we don't need to duplicate the various format masks with different separators (slash, hyphen)  
+    v_result := try_parse_date (i_str, 'DD.MM.RRRR HH24:MI:SS');
+    v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MM HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'DDMMYYYY HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMMDD HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMM'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'MM.YYYY'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MON.RRRR HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY-MM-DD"T"HH24:MI:SS".000Z"')); -- standard XML date format
+
+    return v_result;
+  end;
+
   ------------------------------------------------------------------------------
   -- check if table exists
   ------------------------------------------------------------------------------

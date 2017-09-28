@@ -6,6 +6,9 @@ as
     as language java name 'java.lang.Thread.sleep(long)'; 
 
 
+  -- parse string to date, accept various formats
+  function parse_date (p_str in varchar2) return date;
+
   function is_number(i_str varchar2) return boolean;
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table;
 

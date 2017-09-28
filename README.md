@@ -60,6 +60,19 @@
 
 ### API
 
+  * **parse_date**
+    ```sql
+    function parse_date (i_str varchar2) return date
+    ```
+
+    ```sql
+    parse given string to date
+    
+    Arguments: 
+       [i_str] (number): date in string
+    ```
+
+
   * **sleep**
     ```sql
     procedure sleep(i_millis in number) 
@@ -70,6 +83,8 @@
     
     Arguments: 
        [i_millis] (number): milliseconds
+    Returns
+       (date): Returns date value of the given string
     ```
 
 
