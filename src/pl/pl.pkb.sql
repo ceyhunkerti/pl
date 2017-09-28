@@ -158,11 +158,8 @@ as
         table_name = '''||upper(i_table) ||''' and
         rownum = 1
     ';
-    --printl(gv_sql);
     
     execute immediate gv_sql into v_part_name;
-    
-    --printl(v_part_name);
     
     v_part_prefix := find_partition_prefix(v_part_name);
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
