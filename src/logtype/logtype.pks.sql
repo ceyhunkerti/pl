@@ -17,7 +17,6 @@ CREATE OR REPLACE TYPE logtype as object (
   member procedure success(message varchar2, statement varchar2 default null),
   member procedure error(message varchar2, statement varchar2 default null),
   
-
   member procedure log(
     name      varchar2,
     message   varchar2 default null, 
