@@ -9,7 +9,7 @@ CREATE OR REPLACE TYPE logtype as object (
   
   
   static function init(name varchar2 default 'anonymous') return logtype,
-  static function init(package_name varchar2 default 'anonymous', proc_name varchar2 default null )
+  static function init(package_name varchar2 default 'anonymous', proc_name varchar2 default null ),
 
   member procedure persist,
 
