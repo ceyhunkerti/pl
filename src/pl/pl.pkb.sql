@@ -68,6 +68,7 @@ as
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMMDD HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMM'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'MM.YYYY'));
@@ -122,23 +123,7 @@ as
     return trim(v_part_prefix);
   end;
 
-  function to_date(i_str long) return date
-  is
-    v_col   varchar2(1000);
-    v_date  date;
-  begin
-    
-    v_col := case length(i_str) 
-      when 4 then 'to_date('''||i_str||''',''yyyy'')'   
-      when 6 then 'to_date('''||i_str||''',''yyyymm'')'
-      when 8 then 'to_date('''||i_str||''',''yyyymmdd'')'
-      else i_str 
-    end;
 
-    gv_sql := 'select '||v_col||' from dual';
-    execute immediate gv_sql into v_date; 
-    return v_date;
-  end;
 
   function find_prev_high_value(i_range_type char, i_next_high_val long) return long
   is
@@ -146,7 +131,7 @@ as
     v_return long;
   begin
 
-    v_high_date := to_date(i_next_high_val);
+    v_high_date := parse_date(i_next_high_val);
 
     v_return := case i_range_type
         when 'd' then to_char(v_high_date-1,'yyyymmdd')
@@ -165,7 +150,7 @@ as
     v_return long;
   begin
 
-    v_high_date := to_date(i_prev_high_val);
+    v_high_date := parse_date(i_prev_high_val);
     
     v_return := case i_range_type
         when 'd' then to_char(v_high_date+1,'yyyymmdd')
@@ -510,7 +495,7 @@ as
         v_prev_high_value := find_prev_high_value(v_range_type, c1.high_value);
         printl(v_prev_high_value);
       
-        if to_date(v_prev_high_value) = i_date then 
+        if parse_date(v_prev_high_value) = i_date then 
             v_partition_name := c1.partition_name;
             printl(v_partition_name);
             exit;
@@ -668,11 +653,10 @@ as
         execute immediate gv_sql into v_part_date;
 
         
-        if v_part_date-1 > to_date(i_end_date) 
+        if v_part_date-1 > parse_date(i_end_date) 
             then continue;
         elsif v_part_date-1 >= to_date(i_start_date) then
             truncate_partition(i_owner, i_table, c1.partition_name);
-            printl('part name '||c1.partition_name);
         else exit;
         end if;
 
@@ -822,7 +806,7 @@ as
     v_high_value  := substr(v_part, instr(v_part, ':')+1);
     v_range_type  := find_partition_range_type(i_owner, i_table); 
     
-    v_max_date := to_date(v_high_value);
+    v_max_date := parse_date(v_high_value);
 
     loop 
 
@@ -867,7 +851,7 @@ as
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
     v_range_type  := find_partition_range_type(i_owner, i_table);
     
-    v_date := to_date(v_high_value);
+    v_date := parse_date(v_high_value);
     
     v_part_name := case v_range_type
         when 'y' then v_part_prefix || to_char(v_date, 'yyyy')
@@ -1091,7 +1075,7 @@ as
       p('Serial#            : ' ||c1.serial#);
       p('Object (Owner/Name): ' ||c1.owner||'.'||c1.object_name);
       p('Object Type        : ' ||c1.object_type);
-      p('Hint: alter system kill session '''||c1.sid||','||c1.serial#||''' immediate;');
+      p('Hint: alter system kill session '''||c1.session_id||','||c1.serial#||''' immediate;');
     end loop;
 
   end;
