@@ -47,12 +47,16 @@ as
   function parse_date (i_str varchar2) return date
   as
     v_result date;
-    function try_parse_date (i_str in varchar2,i_date_format in varchar2) return date
+    function try_parse_date (i_str in varchar2,i_date_format in varchar2 default null) return date
     as
       v_result date;
     begin
       begin
-        v_result := to_date(i_str, i_date_format);
+        if i_date_format is null then 
+          execute immediate 'select '||i_str||' from dual' into v_result;  
+        else
+          v_result := to_date(i_str, i_date_format);
+        end if;  
       exception
         when others then
           v_result:=null;
@@ -64,7 +68,7 @@ as
     -- note: Oracle handles separator characters (comma, dash, slash) interchangeably,
     --       so we don't need to duplicate the various format masks with different separators (slash, hyphen)  
     v_result := try_parse_date (i_str, 'DD.MM.RRRR HH24:MI:SS');
-    v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MM HH24:MI:SS'));
+    v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MM HH24:MI:SS')); 
     v_result := coalesce(v_result, try_parse_date (i_str, 'DDMMYYYY HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMMDD HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY.MM.DD HH24:MI:SS'));
@@ -75,7 +79,7 @@ as
     v_result := coalesce(v_result, try_parse_date (i_str, 'MM.YYYY'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MON.RRRR HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYY-MM-DD"T"HH24:MI:SS".000Z"')); -- standard XML date format
-
+    v_result := coalesce(v_result, try_parse_date (i_str));
     return v_result;
   end;
 
@@ -851,7 +855,7 @@ as
     v_part_prefix := find_partition_prefix(v_part_name);
     v_part_suffix := ltrim(v_part_name, v_part_prefix);
     v_range_type  := find_partition_range_type(i_owner, i_table);
-    
+
     v_date := parse_date(v_high_value);
     
     v_part_name := case v_range_type
@@ -1051,6 +1055,13 @@ as
       enabled       =>  true,  
       auto_drop     =>  true
     ); 
+  end;
+
+  -- metadata
+  function ddl(i_name varchar2, i_schema varchar2, i_type varchar2 default 'TABLE') return clob
+  is
+  begin
+    return dbms_metadata.get_ddl(i_type, i_name ,i_schema);
   end;
 
   
