@@ -1,4 +1,4 @@
-create or replace type body logtype as
+type body logtype as
 
   ------------------------------------------------------------------------------
   -- License
@@ -34,13 +34,13 @@ create or replace type body logtype as
     return logtype(name, null, sysdate, null, null, null);
   end;
 
-  static function init(package_name varchar2 default 'anonymous', proc_name varchar2 default null )  return logtype
+  
+  static function init(package_name varchar2 , proc_name varchar2 )  return logtype
   is
-    name varchar2(100) := package_name || nvl2(proc_name,'.'||proc_name,'');
+    name varchar2(100) := package_name ||'.'||proc_name;
   begin
     return logtype(name, null, sysdate, null, null, null);
   end;
-
   ------------------------------------------------------------------------------
   -- store log object on logtable
   ------------------------------------------------------------------------------

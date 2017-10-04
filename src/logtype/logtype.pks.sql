@@ -1,4 +1,4 @@
-CREATE OR REPLACE TYPE logtype as object (
+TYPE logtype as object (
 
   name        varchar2(1000),
   log_level   varchar2(20),
@@ -9,14 +9,16 @@ CREATE OR REPLACE TYPE logtype as object (
   
   
   static function init(name varchar2 default 'anonymous') return logtype,
-  static function init(package_name varchar2 default 'anonymous', proc_name varchar2 default null ),
-
+  static function init(package_name varchar2 , proc_name varchar2 )  return logtype,
+  	
+  
   member procedure persist,
 
   member procedure info(message varchar2, statement varchar2 default null),
   member procedure success(message varchar2, statement varchar2 default null),
   member procedure error(message varchar2, statement varchar2 default null),
   
+
   member procedure log(
     name      varchar2,
     message   varchar2 default null, 

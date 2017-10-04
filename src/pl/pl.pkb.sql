@@ -339,7 +339,6 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.truncate_table';
   begin
-    logger := logtype.init(v_proc);
     gv_sql := 'truncate table ' || i_table;
     execute immediate gv_sql;
     logger.success(i_table|| ' truncated', gv_sql);
@@ -357,7 +356,6 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.truncate_table';
   begin
-    logger := logtype.init(v_proc);
     gv_sql := 'truncate table '|| i_owner || '.' || i_table;
     execute immediate gv_sql;
     logger.success(i_owner || '.' || i_table|| ' truncated', gv_sql);
@@ -376,7 +374,6 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.drop_table';
   begin
-    logger := logtype.init(v_proc);
     gv_sql := 'drop table '|| i_table;
     execute immediate gv_sql;
     logger.success(i_table|| ' dropped', gv_sql);
@@ -395,7 +392,6 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.drop_table';
   begin
-    logger := logtype.init(v_proc);
     gv_sql := 'drop table '|| i_owner || '.' || i_table;
     execute immediate gv_sql;
     logger.success(i_owner || '.' || i_table|| ' dropped', gv_sql);
@@ -540,7 +536,6 @@ as
   begin
     
     gv_proc   := 'pl.truncate_partitions'; 
-    logger := logtype.init(gv_proc);
     
     v_range_type  := find_partition_range_type(i_owner, i_table); 
     
@@ -600,8 +595,7 @@ as
     v_min_date date;
   begin
     gv_proc   := 'pl.truncate_partitions'; 
-    logger := logtype.init(gv_proc);
-
+    
     v_range_type  := find_partition_range_type(i_owner, i_table); 
     v_partition_col_type := find_partition_col_type(i_owner, i_table);
     
@@ -687,8 +681,7 @@ as
     v_cnt           number;
     
   begin
-    logger := logtype.init(v_proc);
-
+    
     v_col_data_type := find_partition_col_type(i_owner, i_table);
 
     for c1 in (
@@ -804,7 +797,6 @@ as
   begin
     
     gv_proc   := 'pl.add_partitions'; 
-    logger := logtype.init(gv_proc);
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_part_prefix := find_partition_prefix(v_part_name);
@@ -846,7 +838,6 @@ as
   begin
   
     gv_proc := gv_package||'.add_partition';
-    logger := logtype.init(gv_proc);
 
     v_partition_col_type := find_partition_col_type(i_owner, i_table);
     v_last_part   := find_max_partition(i_owner, i_table);
@@ -1008,7 +999,6 @@ as
   begin
 
     gv_proc := gv_package||'.exchange_partition';
-    logger := logtype.init(gv_proc);
 
     gv_sql := 
       'alter table '||i_owner||'.'||i_table_1||' exchange partition '|| i_part_name||'
