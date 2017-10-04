@@ -42,7 +42,7 @@ as
   pragma exception_init(table_not_partitioned, -20171);
   
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
-
+  function cr(i_str clob, i_cnt integer) return clob;
 
   function parse_date (i_str varchar2) return date
   as
@@ -1048,10 +1048,19 @@ as
   end;
 
   -- metadata
-  function ddl(i_name varchar2, i_schema varchar2, i_type varchar2 default 'TABLE') return clob
+  function ddl(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
+    v_result clob := '';
   begin
-    return dbms_metadata.get_ddl(i_type, i_name ,i_schema);
+    if i_schema is not null then 
+      return dbms_metadata.get_ddl(i_type, i_name ,i_schema);
+    end if;
+
+    for c in (select owner, object_type, object_name from dba_objects where object_name = upper(i_name)) loop
+      v_result := v_result || cr(dbms_metadata.get_ddl(c.object_type, c.object_name ,c.owner),4);
+    end LOOP;
+    
+    return v_result;
   end;
 
   
@@ -1081,6 +1090,16 @@ as
     end loop;
 
   end;
+
+  function cr(i_str clob, i_cnt integer) return clob 
+  is
+    v_str clob := i_str;
+  begin
+    for i in 1 .. abs(i_cnt) loop
+      v_str := v_str || chr(10);
+    end loop;
+    return v_str;
+  end; 
 
 
   ------------------------------------------------------------------------------
