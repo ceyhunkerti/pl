@@ -1091,6 +1091,7 @@ as
 
   end;
 
+  -- simple append carriage-return method
   function cr(i_str clob, i_cnt integer) return clob 
   is
     v_str clob := i_str;
