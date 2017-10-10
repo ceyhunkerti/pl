@@ -1,4 +1,4 @@
-type body logtype as
+create or replace type body logtype as
 
   ------------------------------------------------------------------------------
   -- License

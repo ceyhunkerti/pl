@@ -1,4 +1,4 @@
-TYPE logtype as object (
+create or replace TYPE logtype as object (
 
   name        varchar2(1000),
   log_level   varchar2(20),
