@@ -37,7 +37,7 @@
 
     ```
 
-  * Run the contents of [logs.ddl.sql](src/logtype/logs.ddl.sql)
+  * Run the contents of [init.ddl.sql](src/init.ddl.sql)
 
   * Run the contents of [logtype.pks.sql](src/logtype/logtype.pks.sql) and [logtype.pkb.sql](src/logtype/logtype.pkb.sql) in order.
 
