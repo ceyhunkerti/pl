@@ -43,6 +43,9 @@ as
   
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
   function cr(i_str clob, i_cnt integer) return clob;
+  function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
+  function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
+  
 
   function parse_date (i_str varchar2) return date
   as
@@ -1048,7 +1051,7 @@ as
   end;
 
   -- metadata
-  function ddl(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob
+  function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
     v_result clob := '';
   begin
@@ -1058,12 +1061,53 @@ as
 
     for c in (select owner, object_type, object_name from dba_objects where object_name = upper(i_name)) loop
       v_result := v_result || cr(dbms_metadata.get_ddl(c.object_type, c.object_name ,c.owner),4);
-    end LOOP;
+    end loop;
     
     return v_result;
   end;
 
+  function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob 
+  is
+    v_result clob;
+    v_ddl varchar2(4000);
+    type curtype is ref cursor;
+    v_allc curtype;
+
+  begin
+
+    gv_sql := 'select owner, object_type, object_name from dba_objects where object_name = upper('i_name||')'
+
+    open v_allc FOR dsql;
+
+    for c in (select owner, object_type, object_name from dba_objects where object_name = upper(i_name)) loop
+      for i in 0..trunc(v_len/4000) loop
+        gv_sql:= 'select dbms_lob.substr@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||'('''||i_type||''','''||i_name||''','''||i_schema||'''),4000,'||to_char(i*4000+1)||') from dual@'||i_dblk;
+        execute immediate gv_sql into v_ddl;      
+        v_result := v_result || v_ddl; 
+      end loop;
+    end loop;
+
+    return v_result
+
+  end;
+
+
+  function ddl(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE', i_dblk varchar2 default null) return clob
+  is
+    v_result clob := '';
+  begin
+
+    if i_dblk is null then 
+      v_result := ddl_local(i_name, i_schema, i_type);
+    else
+      v_result := ddl_remote(i_dblk, i_name, i_schema, i_type);
+    end if;
+
+    return v_result;
+  end;
   
+
+
   ------------------------------------------------------------------------------
   -- print locked objects to dbms output
   ------------------------------------------------------------------------------
@@ -1101,6 +1145,13 @@ as
     end loop;
     return v_str;
   end; 
+
+  procedure imp(i_name varchar2, i_schema varchar2, i_dblk varchar2)
+  is
+  begin
+
+  end;
+
 
 
   ------------------------------------------------------------------------------

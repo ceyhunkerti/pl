@@ -61,7 +61,16 @@ as
 
   ------------------------------------------------------------------------------
   -- metadata
-  function ddl(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
+  function ddl(
+    i_name varchar2, 
+    i_schema varchar2 default null, 
+    i_type varchar2 default 'TABLE', 
+    i_dblk varchar2 default null
+  ) return clob;
+
+  ------------------------------------------------------------------------------
+  -- data
+  procedure imp(i_name varchar2, i_schema varchar2, i_dblk varchar2);
 
   -- todo
   -- function locks; --pipelined

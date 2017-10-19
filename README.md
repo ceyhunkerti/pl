@@ -13,28 +13,24 @@
 
   * Create a schema named **util** with:
     ```sql
-      create user util identified by <password>;
+      create user util identified by <password>;      
+    ```
+  * Grant privileges
+  
+    ```sql
+      GRANT CONNECT, RESOURCE TO UTIL;
+      
+      GRANT SELECT ON dba_constraints TO util;
+      
+      GRANT SELECT ON dba_indexes TO util;
 
-      grant connect, resource to util;
+      GRANT SELECT ON dba_objects TO util;
     ```
 
   * Change the current schema to **util**
 
     ```sql
       alter session set current_schema = util;
-    ```
-
-  * Grant privileges
-  
-    ```sql
-      GRANT SELECT ON dba_constraints TO util;
-      
-      GRANT SELECT ON dba_indexes TO util;
-
-      GRANT SELECT ON dba_objects TO util;
-
-      GRANT SELECT ON v$locked_object TO util;
-
     ```
 
   * Run the contents of [init.ddl.sql](src/init.ddl.sql)
