@@ -569,17 +569,19 @@
 
   * **ddl**
     ```sql
-      function ddl(
-        i_name varchar2, 
-        i_schema varchar2 default null, 
-        i_type varchar2 default 'TABLE'
-      ) return clob
+        function ddl(
+          i_name varchar2, 
+          i_schema varchar2 default null, 
+          i_dblk varchar2 default null,
+          i_type varchar2 default 'TABLE'
+        ) return clob;
     ```
     ```sql
       Returns metadata of the object(s). If only name is given returns all matching objects'' metadata
       Arguments: 
         [i_name] (varchar2): name of the object
         [i_schema] (varchar2): owner of the object
+        [i_dblk] (varchar2): db-link for remote objects
         [i_type='TABLE'] (varchar2): object type
       Returns
         (boolean): true if param exists false otherwise
