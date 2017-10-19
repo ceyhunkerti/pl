@@ -64,8 +64,8 @@ as
   function ddl(
     i_name varchar2, 
     i_schema varchar2 default null, 
-    i_type varchar2 default 'TABLE', 
-    i_dblk varchar2 default null
+    i_dblk varchar2 default null,
+    i_type varchar2 default 'TABLE'
   ) return clob;
 
   ------------------------------------------------------------------------------

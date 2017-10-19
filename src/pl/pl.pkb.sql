@@ -1026,10 +1026,9 @@ as
   is
     v_proc varchar2(1000) := gv_package || '.enable_parallel_dml';
   begin
-      
-      gv_sql := 'alter session disable parallel dml';
-      execute immediate gv_sql;
-      logger.success(' disabled parallel dml for current session', gv_sql);
+    gv_sql := 'alter session disable parallel dml';
+    execute immediate gv_sql;
+    logger.success(' disabled parallel dml for current session', gv_sql);
   exception
     when others then
       logger.error( SQLERRM, gv_sql);
@@ -1072,14 +1071,23 @@ as
     v_ddl varchar2(4000);
     type curtype is ref cursor;
     v_allc curtype;
-
+    v_len number;
+    v_owner varchar2(30); 
+    v_object_type varchar2(30); 
+    v_object_name varchar2(30); 
   begin
 
-    gv_sql := 'select owner, object_type, object_name from dba_objects where object_name = upper('i_name||')'
+    gv_sql := 'select owner, object_type, object_name from all_objects@'||i_dblk||' where object_name = upper('''||i_name||''')';
 
-    open v_allc FOR dsql;
-
-    for c in (select owner, object_type, object_name from dba_objects where object_name = upper(i_name)) loop
+    open v_allc FOR gv_sql;
+    loop
+      exit when v_allc%notfound;
+      fetch v_allc into v_owner, v_object_type, v_object_name;
+      
+      gv_sql:= 'select dbms_lob.getlength@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||
+        '('''||v_object_type||''','''||v_object_name||''','''||v_owner||''')) from dual@'||i_dblk;
+      execute immediate gv_sql into v_len;
+    
       for i in 0..trunc(v_len/4000) loop
         gv_sql:= 'select dbms_lob.substr@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||'('''||i_type||''','''||i_name||''','''||i_schema||'''),4000,'||to_char(i*4000+1)||') from dual@'||i_dblk;
         execute immediate gv_sql into v_ddl;      
@@ -1087,12 +1095,11 @@ as
       end loop;
     end loop;
 
-    return v_result
+    return v_result;
 
   end;
 
-
-  function ddl(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE', i_dblk varchar2 default null) return clob
+  function ddl(i_name varchar2, i_schema varchar2 default null, i_dblk varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
     v_result clob := '';
   begin
@@ -1106,8 +1113,6 @@ as
     return v_result;
   end;
   
-
-
   ------------------------------------------------------------------------------
   -- print locked objects to dbms output
   ------------------------------------------------------------------------------
@@ -1149,10 +1154,8 @@ as
   procedure imp(i_name varchar2, i_schema varchar2, i_dblk varchar2)
   is
   begin
-
+	NULL;
   end;
-
-
 
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me

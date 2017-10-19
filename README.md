@@ -15,6 +15,7 @@
     ```sql
       create user util identified by <password>;      
     ```
+    
   * Grant privileges
   
     ```sql
