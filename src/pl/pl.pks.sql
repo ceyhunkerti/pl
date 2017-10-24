@@ -9,7 +9,7 @@ as
   function is_number(i_str varchar2) return boolean;
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table;
 
-
+  function parse_date (i_str varchar2) return date;
   function date_string(i_date date) return varchar2;
   
   function table_exists(i_owner varchar2, i_table varchar2) return boolean;

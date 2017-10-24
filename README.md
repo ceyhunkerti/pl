@@ -576,6 +576,7 @@
           i_type varchar2 default 'TABLE'
         ) return clob;
     ```
+    
     ```sql
       Returns metadata of the object(s). If only name is given returns all matching objects'' metadata
       Arguments: 
