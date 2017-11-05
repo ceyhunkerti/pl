@@ -1157,6 +1157,19 @@ as
     null;
   end;
 
+  function is_email(i_email varchar2) return boolean
+  is
+    v_result number;
+  begin
+    select 1 into v_result 
+    from dual 
+    where regexp_like(i_email,'^\w+(\.\w+)*+@\w+(\.\w+)+$');
+    return true;
+  exception
+    when no_data_found then
+      return false;
+  end;
+
   ------------------------------------------------------------------------------
   -- for those who struggels to remember dbms_output.putline! :) like me
   ------------------------------------------------------------------------------

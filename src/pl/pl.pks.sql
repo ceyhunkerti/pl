@@ -75,11 +75,18 @@ as
   -- todo
   -- function locks; --pipelined
 
+  ------------------------------------------------------------------------------
+  -- validation
+  function is_email(i_email varchar2) return boolean;
+
+
+
 
   procedure println(i_message varchar2);
   procedure printl(i_message varchar2);
   procedure p(i_message varchar2);
   procedure print(i_message varchar2);
   
+
 
 end;

@@ -26,6 +26,10 @@
       GRANT SELECT ON dba_indexes TO util;
 
       GRANT SELECT ON dba_objects TO util;
+
+      GRANT SELECT ON v$lock TO util;
+
+      GRANT SELECT ON v$session TO util;
     ```
 
   * Change the current schema to **util**
@@ -48,10 +52,6 @@
       grant execute on util.logtype to public;
 
       grant execute on util.pl to public;
-
-      GRANT SELECT ON v$lock TO util;
-
-      GRANT SELECT ON v$session  TO util;
     ```
 
 
@@ -565,6 +565,18 @@
     ```sql
       Send mail to given recipients. Set mail server settings on `params` before
       using this method!
+    ```
+
+  * **is_email**
+    ```sql
+      function is_email(i_email varchar2) 
+    ```
+
+    ```sql
+      Arguments: 
+        [i_email] (varchar2): given email address 
+      Returns
+        (boolean): true if input is a valid email address
     ```
 
   * **ddl**
