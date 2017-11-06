@@ -4,7 +4,7 @@ as
   -- License
   ------------------------------------------------------------------------------
   -- This work is licensed under a Creative Commons Attribution 4.0 International License.
-  --
+  -- https://creativecommons.org/licenses/by/4.0/
   ------------------------------------------------------------------------------
 
   -- name of this package
@@ -21,7 +21,7 @@ as
 
   pragma exception_init(partition_not_found,   -20170);
   pragma exception_init(table_not_partitioned, -20171);
-  
+
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2;
   function cr(i_str clob, i_cnt integer) return clob;
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
@@ -270,7 +270,7 @@ as
   
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2
   is
-    v_col_data_type varchar2(20)  := 'DATE';
+    v_col_data_type varchar2(100)  := 'DATE';
   begin
     gv_sql :='
       select 
@@ -601,7 +601,7 @@ as
 
     execute immediate gv_sql into v_max_date;
     
-    --printl('max date'||v_max_date);
+
     
     v_part := find_min_partition(i_owner, i_table);
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
@@ -774,7 +774,6 @@ as
     v_part long := find_max_partition(i_owner, i_table);
     v_part_name   varchar2(50);
     v_high_value  long;
-    v_part_prefix varchar2(10) := '';
     v_range_type  char(1):= 'd';
     v_partition_col_type varchar2(20) := find_partition_col_type(i_owner, i_table);  
     v_max_date    date;
@@ -783,7 +782,6 @@ as
     gv_proc   := 'pl.add_partitions'; 
     
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
-    v_part_prefix := find_partition_prefix(v_part_name);
     v_high_value  := substr(v_part, instr(v_part, ':')+1);
     v_range_type  := find_partition_range_type(i_owner, i_table); 
     
@@ -814,9 +812,9 @@ as
     v_high_value long;
     v_part_name  varchar2(50);
     v_partition_col_type varchar2(20);
-    v_last_part   long;
-    v_part_prefix varchar2(20);
-    v_part_suffix varchar2(10);
+    v_last_part   varchar2(4000);
+    v_part_prefix varchar2(100);
+    v_part_suffix varchar2(100);
     v_range_type  char(1):= 'd';
     v_date date;
   begin
