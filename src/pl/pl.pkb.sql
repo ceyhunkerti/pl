@@ -1054,22 +1054,30 @@ as
     v_owner varchar2(30); 
     v_object_type varchar2(30); 
     v_object_name varchar2(30); 
+    v_schema_filter varchar2(1000) := '';
+    v_sql long;
   begin
 
-    gv_sql := 'select owner, object_type, object_name from all_objects@'||i_dblk||' where object_name = upper('''||i_name||''')';
+    if i_schema is not null then 
+      v_schema_filter := 'owner = upper('''||i_schema||''') AND ';
+    end if;
+
+    gv_sql := 'select owner, object_type, object_name from all_objects@'||i_dblk||' where 
+    '||v_schema_filter||'
+    object_name = upper('''||i_name||''')';
 
     open v_allc FOR gv_sql;
     loop
-      exit when v_allc%notfound;
       fetch v_allc into v_owner, v_object_type, v_object_name;
+      exit when v_allc%notfound;
       
-      gv_sql:= 'select dbms_lob.getlength@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||
+      v_sql:= 'select dbms_lob.getlength@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||
         '('''||v_object_type||''','''||v_object_name||''','''||v_owner||''')) from dual@'||i_dblk;
-      execute immediate gv_sql into v_len;
+      execute immediate v_sql into v_len;
     
       for i in 0..trunc(v_len/4000) loop
-        gv_sql:= 'select dbms_lob.substr@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||'('''||i_type||''','''||i_name||''','''||i_schema||'''),4000,'||to_char(i*4000+1)||') from dual@'||i_dblk;
-        execute immediate gv_sql into v_ddl;      
+        v_sql:= 'select dbms_lob.substr@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||'('''||i_type||''','''||i_name||''','''||i_schema||'''),4000,'||to_char(i*4000+1)||') from dual@'||i_dblk;
+        execute immediate v_sql into v_ddl;      
         v_result := v_result || v_ddl; 
       end loop;
     end loop;
