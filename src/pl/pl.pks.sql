@@ -2,6 +2,29 @@ CREATE OR REPLACE package UTIL.pl authid current_user
 as
   logger logtype := logtype.init('anonymous');
 
+  type attachment IS RECORD (
+    name varchar2(1000),
+    data_type varchar2(100) default 'text/plain',
+    content clob default ''
+  );
+
+  type attachments is table of attachment;
+
+  procedure send_mail (
+    i_from varchar2,
+    i_to varchar2,
+    i_cc varchar2 default '',
+    i_subject varchar2,
+    i_body varchar2,
+    i_attachments attachments default null
+    i_host varchar2,
+    i_port number default 25,
+    i_username varchar2,
+    i_password varchar2,
+    i_content_type varchar2 default 'text/plain'
+  );
+
+
   procedure sleep(i_millis in number) 
     as language java name 'java.lang.Thread.sleep(long)'; 
 
@@ -78,9 +101,6 @@ as
   ------------------------------------------------------------------------------
   -- validation
   function is_email(i_email varchar2) return boolean;
-
-
-
 
   procedure println(i_message varchar2);
   procedure printl(i_message varchar2);

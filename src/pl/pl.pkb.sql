@@ -27,6 +27,110 @@ as
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
   
+  procedure send_mail (
+    i_from varchar2,
+    i_to varchar2,
+    i_cc varchar2 default '',
+    i_subject varchar2,
+    i_body varchar2,
+    i_attachments attachments default null
+    i_host varchar2,
+    i_port number default 25,
+    i_username varchar2,
+    i_password varchar2,
+    i_content_type varchar2 default 'text/plain'
+  ) is
+    v_to varchar2(1000) = '';
+    v_cc varchar2(1000) = '';
+    v_connection utl_smtp.connection;
+    v_tokens dbms_sql.varchar2_table;
+    v_buffer number;
+    v_amount number:= 1900;
+    
+    v_username_b64 :=
+      utl_raw.cast_to_varchar2(
+        utl_encode.base64_encode(utl_raw.cast_to_raw(i_username))
+      );
+    v_password_b64 :=
+      utl_raw.cast_to_varchar2(
+        utl_encode.base64_encode(utl_raw.cast_to_raw(i_password))
+      );
+  begin
+    v_connection := utl_smtp.open_connection(i_host);
+    
+    utl_smtp.ehlo(v_connection, i_host); -- Must use EHLO  vs HELO
+    if i_username is not null and i_password is not null then
+      utl_smtp.command(v_connection, 'AUTH', 'LOGIN');  -- should receive a 334 response, prompting for username
+      utl_smtp.command(v_connection, v_username_b64);   -- should receive a 334 response, prompting for password
+      utl_smtp.command(v_connection, v_password_b64);   -- should receive a 235 response, you are authenticated
+    end if;
+
+    v_to := replace(i_to, ' ');
+    v_to := replace(v_to, ',', ';');
+    v_tokens := split(v_to, ';') 
+    
+    for i in 1 .. v_tokens.length loop
+      utl_smtp.rcpt(v_connection, v_tokens(i));
+    end loop;
+    
+    v_cc := replace(i_cc, ' ');
+    v_cc := replace(v_cc, ',', ';');
+    v_tokens := split(v_cc, ';') 
+    
+    for i in 1 .. v_tokens.length loop
+      utl_smtp.rcpt(v_connection, v_tokens(i));
+    end loop;
+    
+    utl_smtp.open_data(v_connection);
+
+    utl_smtp.write_data(
+      v_connection, 
+      'Subject: =?UTF-8?Q?'||
+        utl_raw.cast_to_varchar2(utl_encode.quoted_printable_encode(utl_raw.cast_to_raw(i_subject)))||
+        '?='|| utl_tcp.crlf
+    );
+    
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('To: ' || v_to || UTL_TCP.crlf));
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('Cc: ' || v_cc || UTL_TCP.crlf));
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('Date: ' || to_char(sysdate, 'Dy, DD Mon YYYY hh24:mi:ss') || utl_tcp.crlf));
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('From: ' || i_from || UTL_TCP.crlf));
+    
+    utl_smtp.write_data(v_connection, 'MIME-version: 1.0' || utl_tcp.crlf);
+    utl_smtp.write_raw_data(v_connection, 
+      utl_raw.cast_to_raw('Content-Type:multipart/mixed;;charset=ISO-8859-9; boundary="SECBOUND"' || 
+      utl_tcp.crlf || utl_tcp.crlf)
+    );
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND'|| utl_tcp.crlf));
+    utl_smtp.write_data(v_connection, 'Content-Type: '||i_content_type||';charset=ISO-8859-9' || utl_tcp.crlf);
+    utl_smtp.write_data(v_connection, 'Content-Transfer-Encoding: 8bit'|| utl_tcp.crlf);
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw(utl_tcp.crlf || i_body || utl_tcp.crlf));
+    utl_smtp.write_data(v_connection, utl_tcp.crlf);
+
+    if i_attachments is not null then
+      for i in v_attachments.first .. i_attachments.last loop
+        utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND' || utl_tcp.crlf));
+        utl_smtp.write_raw_data(v_connection, 
+          utl_raw.cast_to_raw('Content-Type: ' || i_attachments(i).data_type 
+          ||' name="'|| i_attachments(i).name || '"' || UTL_TCP.crlf)
+        );
+        utl_smtp.write_raw_data(v_connection, 
+          utl_raw.cast_to_raw('Content-Disposition: attachment; filename="'|| 
+          i_attachments(i).name || '"' || utl_tcp.crlf || UTL_TCP.crlf)
+        );
+        v_buffer := 1;
+        while v_buffer < dbms_lob.getlength(i_attachments(i).content) loop
+          utl_smtp.write_raw_data(v_connection, 
+            utl_raw.cast_to_raw(dbms_lob.substr(i_attachments(i).content, v_amount, v_buffer)));
+            v_buffer := v_buffer + v_amount;
+        end loop;
+        utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw(''||utl_tcp.crlf));
+      end loop;
+    end if;
+
+    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND--' || utl_tcp.crlf));
+    utl_smtp.close_data(v_connection);
+    utl_smtp.quit(v_connection);
+  end;
 
   function parse_date (i_str varchar2) return date
   as
@@ -1052,7 +1156,6 @@ as
     v_allc curtype;
     v_len number;
     v_owner varchar2(30); 
-    v_object_type varchar2(30); 
     v_object_name varchar2(30); 
     v_schema_filter varchar2(1000) := '';
     v_sql long;
@@ -1062,17 +1165,18 @@ as
       v_schema_filter := 'owner = upper('''||i_schema||''') AND ';
     end if;
 
-    gv_sql := 'select owner, object_type, object_name from all_objects@'||i_dblk||' where 
-    '||v_schema_filter||'
-    object_name = upper('''||i_name||''')';
+    gv_sql := 'select owner, object_name from all_objects@'||i_dblk||' where 
+      '||v_schema_filter||'
+      object_name = upper('''||i_name||''') AND
+      upper(object_type) = '''||i_type||''' ';
 
     open v_allc FOR gv_sql;
     loop
-      fetch v_allc into v_owner, v_object_type, v_object_name;
+      fetch v_allc into v_owner, v_object_name;
       exit when v_allc%notfound;
-      
+
       v_sql:= 'select dbms_lob.getlength@'||i_dblk||'(dbms_metadata.get_ddl@'||i_dblk||
-        '('''||v_object_type||''','''||v_object_name||''','''||v_owner||''')) from dual@'||i_dblk;
+        '('''||i_type||''','''||v_object_name||''','''||v_owner||''')) from dual@'||i_dblk;
       execute immediate v_sql into v_len;
     
       for i in 0..trunc(v_len/4000) loop
