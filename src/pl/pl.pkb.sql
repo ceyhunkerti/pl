@@ -33,32 +33,29 @@ as
     i_cc varchar2 default '',
     i_subject varchar2,
     i_body varchar2,
-    i_attachments attachments default null
+    i_attachments attachments default null,
     i_host varchar2,
     i_port number default 25,
-    i_username varchar2,
-    i_password varchar2,
+    i_username varchar2 default null,
+    i_password varchar2  default null,
     i_content_type varchar2 default 'text/plain'
   ) is
-    v_to varchar2(1000) = '';
-    v_cc varchar2(1000) = '';
+    v_to varchar2(1000) := '';
+    v_cc varchar2(1000) := '';
     v_connection utl_smtp.connection;
     v_tokens dbms_sql.varchar2_table;
     v_buffer number;
     v_amount number:= 1900;
-    
-    v_username_b64 :=
-      utl_raw.cast_to_varchar2(
-        utl_encode.base64_encode(utl_raw.cast_to_raw(i_username))
-      );
-    v_password_b64 :=
-      utl_raw.cast_to_varchar2(
-        utl_encode.base64_encode(utl_raw.cast_to_raw(i_password))
-      );
+    v_username_b64 varchar2(10000) := utl_raw.cast_to_varchar2(
+      utl_encode.base64_encode(utl_raw.cast_to_raw(i_username))
+    );
+    v_password_b64 varchar2(10000) := utl_raw.cast_to_varchar2(
+      utl_encode.base64_encode(utl_raw.cast_to_raw(i_password))
+    );
   begin
     v_connection := utl_smtp.open_connection(i_host);
     
-    utl_smtp.ehlo(v_connection, i_host); -- Must use EHLO  vs HELO
+    utl_smtp.ehlo(v_connection, i_host); -- Must use EHLO vs HELO
     if i_username is not null and i_password is not null then
       utl_smtp.command(v_connection, 'AUTH', 'LOGIN');  -- should receive a 334 response, prompting for username
       utl_smtp.command(v_connection, v_username_b64);   -- should receive a 334 response, prompting for password
@@ -67,17 +64,17 @@ as
 
     v_to := replace(i_to, ' ');
     v_to := replace(v_to, ',', ';');
-    v_tokens := split(v_to, ';') 
+    v_tokens := split(v_to, ';');
     
-    for i in 1 .. v_tokens.length loop
+    for i in v_tokens.first .. v_tokens.last loop
       utl_smtp.rcpt(v_connection, v_tokens(i));
     end loop;
     
     v_cc := replace(i_cc, ' ');
     v_cc := replace(v_cc, ',', ';');
-    v_tokens := split(v_cc, ';') 
+    v_tokens := split(v_cc, ';'); 
     
-    for i in 1 .. v_tokens.length loop
+    for i in v_tokens.first .. v_tokens.last loop
       utl_smtp.rcpt(v_connection, v_tokens(i));
     end loop;
     
@@ -107,7 +104,7 @@ as
     utl_smtp.write_data(v_connection, utl_tcp.crlf);
 
     if i_attachments is not null then
-      for i in v_attachments.first .. i_attachments.last loop
+      for i in i_attachments.first .. i_attachments.last loop
         utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND' || utl_tcp.crlf));
         utl_smtp.write_raw_data(v_connection, 
           utl_raw.cast_to_raw('Content-Type: ' || i_attachments(i).data_type 
@@ -705,8 +702,6 @@ as
 
     execute immediate gv_sql into v_max_date;
     
-
-    
     v_part := find_min_partition(i_owner, i_table);
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
     v_high_value  := ltrim(v_part, v_part_name||':');
@@ -735,25 +730,20 @@ as
       order by partition_position desc
     )
     loop        
-        gv_sql := 'select '||c1.high_value||' from dual';   
-
-        execute immediate gv_sql into v_part_date;
-
-        
-        if v_part_date-1 > parse_date(i_end_date) 
-            then continue;
-        elsif v_part_date-1 >= to_date(i_start_date) then
-            truncate_partition(i_owner, i_table, c1.partition_name);
-        else exit;
-        end if;
-
+      gv_sql := 'select '||c1.high_value||' from dual';   
+      execute immediate gv_sql into v_part_date;
+      if v_part_date-1 > parse_date(i_end_date) 
+        then continue;
+      elsif v_part_date-1 >= to_date(i_start_date) then
+        truncate_partition(i_owner, i_table, c1.partition_name);
+      else exit;
+      end if;
     end loop;
     
     exception 
     when others then 
       pl.logger.error(SQLERRM, gv_sql);
       raise;
-
   end;
   
   procedure drop_partition(
@@ -795,9 +785,7 @@ as
         execute immediate gv_sql;
         logger.success('op:'||i_operator, gv_sql);
       end if;
-
     end loop;
-    
   
   exception 
     when others then 
@@ -1035,7 +1023,6 @@ as
       pl.logger.error(SQLERRM, gv_sql);
       raise;
   end;
-
 
 
   procedure manage_indexes(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE') 

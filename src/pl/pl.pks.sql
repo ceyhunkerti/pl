@@ -16,18 +16,16 @@ as
     i_cc varchar2 default '',
     i_subject varchar2,
     i_body varchar2,
-    i_attachments attachments default null
+    i_attachments attachments default null,
     i_host varchar2,
     i_port number default 25,
-    i_username varchar2,
-    i_password varchar2,
+    i_username varchar2 default null,
+    i_password varchar2 default null,
     i_content_type varchar2 default 'text/plain'
   );
 
-
   procedure sleep(i_millis in number) 
     as language java name 'java.lang.Thread.sleep(long)'; 
-
 
   function is_number(i_str varchar2) return boolean;
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table;
