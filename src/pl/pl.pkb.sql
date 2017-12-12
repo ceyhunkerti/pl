@@ -1025,6 +1025,13 @@ as
   end;
 
 
+  procedure unlock_table_stats(i_owner varchar2, i_table varchar2)
+  is
+  begin
+    DBMS_STATS.UNLOCK_TABLE_STATS(upper(i_owner),upper(i_table));
+  end;
+  
+
   procedure manage_indexes(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE') 
   is
   begin

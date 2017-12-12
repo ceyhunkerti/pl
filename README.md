@@ -21,15 +21,21 @@
     ```sql
       GRANT CONNECT, RESOURCE TO UTIL;
       
-      GRANT SELECT ON dba_constraints TO util;
+      GRANT SELECT ON sys.dba_constraints TO util;
       
-      GRANT SELECT ON dba_indexes TO util;
+      GRANT SELECT ON sys.dba_indexes TO util;
 
-      GRANT SELECT ON dba_objects TO util;
+      GRANT SELECT ON sys.dba_objects TO util;
 
-      GRANT SELECT ON v$lock TO util;
+      GRANT SELECT ON sys.v$lock TO util;
 
-      GRANT SELECT ON v$session TO util;
+      GRANT SELECT ON sys.v_$lock TO util;
+
+      GRANT SELECT ON sys.v$session TO util;
+
+      GRANT SELECT ON sys.v_$session TO util;
+
+      GRANT SELECT ON sys.v_$locked_object to util;
     ```
 
   * Change the current schema to **util**

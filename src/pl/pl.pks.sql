@@ -46,6 +46,7 @@ as
   procedure manage_indexes(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE');
   procedure enable_indexes(i_owner varchar2, i_table varchar2);
   procedure disable_indexes(i_owner varchar2, i_table varchar2);
+  procedure unlock_table_stats(i_owner varchar2, i_table varchar2);
 
   procedure drop_constraint(i_owner varchar2, i_table varchar2, i_constraint varchar2);
   procedure add_unique_constraint(i_owner varchar2, i_table varchar2, i_col_list varchar2, i_constraint varchar2);
