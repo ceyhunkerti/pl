@@ -24,7 +24,7 @@ as
     i_content_type varchar2 default 'text/plain'
   );
 
-  procedure sleep(i_millis in number) 
+  procedure sleep(P in number) 
     as language java name 'java.lang.Thread.sleep(long)'; 
 
   function is_number(i_str varchar2) return boolean;

@@ -606,11 +606,10 @@ as
       raise;
   end;
   
-    ------------------------------------------------------------------------------
-    -- truncates given partitions starting from date through number of patitions,
-    -- raises error if partition not found.
-    ------------------------------------------------------------------------------
-
+  ------------------------------------------------------------------------------
+  -- truncates given partitions starting from date through number of patitions,
+  -- raises error if partition not found.
+  ------------------------------------------------------------------------------
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_date date, i_num_part number)
   is
     v_range_type  char(1):= 'd';

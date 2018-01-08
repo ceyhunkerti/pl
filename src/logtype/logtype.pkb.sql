@@ -71,12 +71,12 @@ create or replace type body logtype as
   member procedure log(
     name      varchar2,
     message   varchar2 default null, 
-    statement varchar2 default null, 
+    statement long default null, 
     log_level varchar2 default 'INFO'
   )
   is
     pragma autonomous_transaction;
-  begin
+    begin
     self.name      := name; 
     self.message   := message;
     self.statement := statement;
@@ -89,7 +89,7 @@ create or replace type body logtype as
   ------------------------------------------------------------------------------
   -- log info level messages
   ------------------------------------------------------------------------------
-  member procedure info(message varchar2, statement varchar2  default null)
+  member procedure info(message varchar2, statement long  default null)
   is
     pragma autonomous_transaction;
   begin
@@ -100,7 +100,7 @@ create or replace type body logtype as
   ------------------------------------------------------------------------------
   -- log success level messages
   ------------------------------------------------------------------------------
-  member procedure success(message varchar2, statement varchar2  default null)
+  member procedure success(message varchar2, statement long  default null)
   is
     pragma autonomous_transaction;
   begin
@@ -111,7 +111,7 @@ create or replace type body logtype as
   ------------------------------------------------------------------------------
   -- log error level messages
   ------------------------------------------------------------------------------
-  member procedure error(message varchar2, statement varchar2 default null)
+  member procedure error(message varchar2, statement long default null)
   is
     pragma autonomous_transaction;
   begin
