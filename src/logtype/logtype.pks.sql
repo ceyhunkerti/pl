@@ -5,7 +5,7 @@ create or replace TYPE logtype as object (
   start_date  date,
   end_date    date, 
   message     varchar2(4000),
-  statement   varchar2(32000),   
+  statement   long,   
   
   
   static function init(name varchar2 default 'anonymous') return logtype,
