@@ -667,7 +667,7 @@ as
     -- raises error if partition not found.
     ------------------------------------------------------------------------------
 
-  procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date)
+  procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date default sysdate)
   is
     v_range_type  char(1):= 'D';
     v_high_value  long;

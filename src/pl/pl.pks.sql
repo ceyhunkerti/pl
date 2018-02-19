@@ -57,7 +57,7 @@ as
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2);
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_date date);
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_date date, i_num_part number);
-  procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date);
+  procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date default sysdate );
   procedure drop_partition(i_owner varchar2, i_table varchar2, i_partition varchar2);
   procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date);  
   procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date);  
