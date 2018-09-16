@@ -13,25 +13,21 @@
 
   * Create a schema named **util** with:
     ```sql
-      create user util identified by <password>;      
+      create user util identified by <password>;
     ```
-    
+
   * Grant privileges
-  
+
     ```sql
       GRANT CONNECT, RESOURCE TO UTIL;
-      
+
       GRANT SELECT ON sys.dba_constraints TO util;
-      
+
       GRANT SELECT ON sys.dba_indexes TO util;
 
       GRANT SELECT ON sys.dba_objects TO util;
 
-      GRANT SELECT ON sys.v$lock TO util;
-
       GRANT SELECT ON sys.v_$lock TO util;
-
-      GRANT SELECT ON sys.v$session TO util;
 
       GRANT SELECT ON sys.v_$session TO util;
 
@@ -53,7 +49,7 @@
   * Optionally create a public synonym for pl with;
 
     ```sql
-      create public synonym pl for util.pl;  
+      create public synonym pl for util.pl;
 
       grant execute on util.logtype to public;
 
@@ -70,21 +66,21 @@
 
     ```sql
     parse given string to date
-    
-    Arguments: 
+
+    Arguments:
        [i_str] (number): date in string
     ```
 
 
   * **sleep**
     ```sql
-    procedure sleep(i_millis in number) 
+    procedure sleep(i_millis in number)
     ```
 
     ```sql
     Sleep given number of milliseconds. !DOES NOT uses dbms_lock
-    
-    Arguments: 
+
+    Arguments:
        [i_millis] (number): milliseconds
     Returns
        (date): Returns date value of the given string
@@ -92,15 +88,15 @@
 
 
   * **is_number**
-  
+
     ```sql
     function is_number(i_str varchar2) return boolean
     ```
 
     ```sql
     Checks if string is classified as a Number or not.
-    
-    Arguments: 
+
+    Arguments:
        [i_str='']    (varchar2): The string to check.
     Returns
        (boolean): Returns true if string is numeric.
@@ -111,23 +107,23 @@
 
     ```sql
     function split(
-      i_str varchar2, 
-      i_split varchar2 default ',', 
+      i_str varchar2,
+      i_split varchar2 default ',',
       i_limit number default null
     ) return dbms_sql.varchar2_table
-    ``` 
+    ```
 
     ```sql
       Splits string by separator.
 
-      Arguments: 
+      Arguments:
          [i_str='']    (varchar2): The string to split.
          [i_split=','] (varchar2): The separator pattern to split by.
          [i_limit]     (number): The length to truncate results to.
       Returns
          (varchar2_table): Returns the string segments.
     ```
-  
+
 
   * **date_string**
 
@@ -136,14 +132,14 @@
     ```
 
     ```sql
-    Returns a date as string containing to_date function. 
+    Returns a date as string containing to_date function.
     Useful when used with 'execute immediate'
-    
-    Arguments: 
+
+    Arguments:
        [i_date] (date): The date object.
     Returns:
        (varchar2): the date function string
-       example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')' 
+       example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')'
     ```
 
   * **truncate_table**
@@ -154,8 +150,8 @@
 
     ```sql
     Truncates the given table
-    
-    Arguments: 
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     ```
@@ -168,8 +164,8 @@
 
     ```sql
     Drops the given table
-    
-    Arguments: 
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
        [pib_ignore_err=true] (boolean): when set to false raises error
@@ -182,9 +178,9 @@
     ```
 
     ```sql
-    Checks whether the given table exists or not 
-    
-    Arguments: 
+    Checks whether the given table exists or not
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     Returns:
@@ -195,15 +191,15 @@
 
     ```sql
     procedure gather_table_stats(
-      i_owner varchar2, 
-      i_table varchar2, 
-      i_part_name varchar2 default null) 
+      i_owner varchar2,
+      i_table varchar2,
+      i_part_name varchar2 default null)
     ```
 
     ```sql
-    Gather table/partition statistics 
-    
-    Arguments: 
+    Gather table/partition statistics
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
        [i_part_name] (varchar2): Name of the partition defaults to null
@@ -213,32 +209,32 @@
 
     ```sql
     procedure manage_constraints(
-      i_owner varchar2, 
-      i_table varchar2, 
-      i_order varchar2 default 'enable') 
+      i_owner varchar2,
+      i_table varchar2,
+      i_order varchar2 default 'enable')
     ```
 
     ```sql
-    Enable/Disable constraints for the given table. 
-    
-    Arguments: 
+    Enable/Disable constraints for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
        [i_order] (varchar2): DISABLE|ENABLE
-    ```  
+    ```
 
   * **enable_constraints**
 
     ```sql
     procedure enable_constraints(
-      i_owner varchar2, 
-      i_table varchar2) 
+      i_owner varchar2,
+      i_table varchar2)
     ```
 
     ```sql
-    Enable constraints for the given table. 
-    
-    Arguments: 
+    Enable constraints for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     ```
@@ -247,14 +243,14 @@
 
     ```sql
     procedure disable_constraints(
-      i_owner varchar2, 
-      i_table varchar2) 
+      i_owner varchar2,
+      i_table varchar2)
     ```
 
     ```sql
-    Disable constraints for the given table. 
-    
-    Arguments: 
+    Disable constraints for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     ```
@@ -263,34 +259,34 @@
 
     ```sql
     procedure manage_indexes(
-      i_owner varchar2, 
-      i_table varchar2, 
-      i_order varchar2 default 'enable') 
+      i_owner varchar2,
+      i_table varchar2,
+      i_order varchar2 default 'enable')
     ```
 
     ```sql
-    Unusable/Rebuild indexes for the given table. 
-    
-    Arguments: 
+    Unusable/Rebuild indexes for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
        [i_order] (varchar2): DISABLE|ENABLE
         DISABLE makes the indexes unusable
         ENABLE rebuilds the indexes
-    ```  
+    ```
 
   * **enable_indexes**
 
     ```sql
     procedure enable_indexes(
-      i_owner varchar2, 
-      i_table varchar2) 
+      i_owner varchar2,
+      i_table varchar2)
     ```
 
     ```sql
-    Rebuild indexes for the given table. 
-    
-    Arguments: 
+    Rebuild indexes for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     ```
@@ -299,33 +295,33 @@
 
     ```sql
     procedure disable_indexes(
-      i_owner varchar2, 
-      i_table varchar2) 
+      i_owner varchar2,
+      i_table varchar2)
     ```
 
     ```sql
-    Make indexes unusable for the given table. 
-    
-    Arguments: 
+    Make indexes unusable for the given table.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
     ```
 
-  * **add_partitions**  
+  * **add_partitions**
 
     ```sql
     procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date)
     ```
 
     ```sql
-    Adds partitions to the given table up to the date given by the 'i_date' parameter. 
-    
-    Arguments: 
+    Adds partitions to the given table up to the date given by the 'i_date' parameter.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (date): the date up to partitions will be added 
+       [i_date] (date): the date up to partitions will be added
     ```
-  
+
   * **add_partition**
 
     ```sql
@@ -333,12 +329,12 @@
     ```
 
     ```sql
-    Adds a single partition to the given table with the date given by the 'i_date' parameter. 
-    
-    Arguments: 
+    Adds a single partition to the given table with the date given by the 'i_date' parameter.
+
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (date): the date partition will be created for 
+       [i_date] (date): the date partition will be created for
     ```
 
   * **truncate_partition**
@@ -350,10 +346,10 @@
     ```sql
     Truncates the given partition.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_partition] (varchar2): name of the partition 
+       [i_partition] (varchar2): name of the partition
     ```
 
   * **drop_partition**
@@ -365,30 +361,30 @@
     ```sql
     Drops the given partition.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_partition] (varchar2): name of the partition 
+       [i_partition] (varchar2): name of the partition
     ```
-  
+
   * **drop_partition_lt**
 
     ```sql
-    procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date); 
+    procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date);
     ```
 
     ```sql
     Drops partitions less than the given date.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary 
+       [i_date] (varchar2): date boundary
     ```
 
 
   * **drop_partition_lte**
-  
+
     ```sql
     procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date)
     ```
@@ -396,10 +392,10 @@
     ```sql
     Drops partitions less than or equal to the given date.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary 
+       [i_date] (varchar2): date boundary
     ```
 
 
@@ -412,13 +408,13 @@
     ```sql
     Drops partitions greater than the given date.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary 
+       [i_date] (varchar2): date boundary
     ```
 
-  
+
   * **drop_partition_gte**
 
     ```sql
@@ -428,19 +424,19 @@
     ```sql
     Drops partitions greater than or equal to the given date.
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary 
+       [i_date] (varchar2): date boundary
     ```
 
   * **window_partitions**
 
     ```sql
     procedure window_partitions(
-      i_owner varchar2, 
-      i_table varchar2, 
-      i_date date, 
+      i_owner varchar2,
+      i_table varchar2,
+      i_date date,
       i_window_size number)
     ```
 
@@ -449,10 +445,10 @@
     and given number by i_number_size parameter. Basically it adds partitions until i_date and drops partitions
     older than i_window_size * (year|month|day)
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary 
+       [i_date] (varchar2): date boundary
        [i_window_size] (number): number of partitions to keep
     ```
 
@@ -460,8 +456,8 @@
 
     ```sql
       procedure exchange_partition(
-        i_owner     varchar2, 
-        i_table_1   varchar2, 
+        i_owner     varchar2,
+        i_table_1   varchar2,
         i_part_name varchar2,
         i_table_2   varchar2,
         pib_validate  boolean default false
@@ -471,33 +467,33 @@
     ```sql
     Exchanges partition of table_1 with the table_2
 
-    Arguments: 
+    Arguments:
        [i_owner] (varchar2): Schema of the table
        [i_table] (varchar2): Name of the table
-       [i_part_name] (varchar2): partitions to be exchanged 
+       [i_part_name] (varchar2): partitions to be exchanged
        [i_table_2] (varchar2): table to replace partition
        [pib_validate=false] (boolean): validate partition after exchange
     ```
 
   * **enable_parallel_dml**
-    
+
     ```sql
     procedure enable_parallel_dml
     ```
 
     ```sql
-    Enable parallel dml for the current session.     
+    Enable parallel dml for the current session.
     ```
 
-  
+
   * **disable_parallel_dml**
-    
+
     ```sql
     procedure disable_parallel_dml
     ```
 
     ```sql
-    Disable parallel dml for the current session.     
+    Disable parallel dml for the current session.
     ```
 
 
@@ -510,8 +506,8 @@
     ```sql
     Execute given statement asynchronously.
 
-    Arguments: 
-       [i_sql] (varchar2): Statement to execute 
+    Arguments:
+       [i_sql] (varchar2): Statement to execute
        [i_name ='ASYNC_EXEC'] (varchar2): Name of the dbms job entry
     ```
 
@@ -523,8 +519,8 @@
     ```sql
     Set parameter on `params` table
 
-    Arguments: 
-      [i_name] (varchar2): parameter name 
+    Arguments:
+      [i_name] (varchar2): parameter name
       [i_value] (varchar2): parameter value
     ```
 
@@ -536,8 +532,8 @@
     ```sql
     Find given parameter
 
-    Arguments: 
-      [i_name] (varchar2): parameter name 
+    Arguments:
+      [i_name] (varchar2): parameter name
     Returns
       (varchar2): Returns parameter value
     ```
@@ -550,8 +546,8 @@
     ```sql
       Check whether given parameter exists.
 
-      Arguments: 
-        [i_name] (varchar2): parameter name 
+      Arguments:
+        [i_name] (varchar2): parameter name
       Returns
         (boolean): true if param exists false otherwise
     ```
@@ -575,12 +571,12 @@
 
   * **is_email**
     ```sql
-      function is_email(i_email varchar2) 
+      function is_email(i_email varchar2)
     ```
 
     ```sql
-      Arguments: 
-        [i_email] (varchar2): given email address 
+      Arguments:
+        [i_email] (varchar2): given email address
       Returns
         (boolean): true if input is a valid email address
     ```
@@ -588,23 +584,23 @@
   * **ddl**
     ```sql
         function ddl(
-          i_name varchar2, 
-          i_schema varchar2 default null, 
+          i_name varchar2,
+          i_schema varchar2 default null,
           i_dblk varchar2 default null,
           i_type varchar2 default 'TABLE'
         ) return clob;
     ```
-    
+
     ```sql
       Returns metadata of the object(s). If only name is given returns all matching objects'' metadata
-      Arguments: 
+      Arguments:
         [i_name] (varchar2): name of the object
         [i_schema] (varchar2): owner of the object
         [i_dblk] (varchar2): db-link for remote objects
         [i_type='TABLE'] (varchar2): object type
       Returns
         (boolean): true if param exists false otherwise
-      
+
     ```
 
 
@@ -629,7 +625,7 @@
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
-    Arguments: 
+    Arguments:
        [i_message] (varchar2): Message to print
     ```
 
@@ -643,9 +639,9 @@
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
-    Arguments: 
+    Arguments:
        [i_message] (varchar2): Message to print
-    ```    
+    ```
 
   * **p**
 
@@ -656,9 +652,9 @@
     ```sql
     Print to dbms out. Shortcut for dbms_output.put_line
 
-    Arguments: 
+    Arguments:
        [i_message] (varchar2): Message to print
-    ```    
+    ```
 
   * **print**
 
@@ -669,6 +665,6 @@
     ```sql
     Print to dbms out. Shortcut for dbms_output.put
 
-    Arguments: 
+    Arguments:
        [i_message] (varchar2): Message to print
-    ```    
+    ```

@@ -464,7 +464,7 @@ as
     logger.success(i_table|| ' dropped', gv_sql);
   exception
     when others then
-      logger.error(SQLERRM, gv_sql);
+      logger.warning(SQLERRM, gv_sql);
       if i_ignore_err = false then raise; end if;
   end;
 
@@ -483,7 +483,7 @@ as
 
   exception
     when others then
-      logger.error(SQLERRM, gv_sql);
+      logger.warning(SQLERRM, gv_sql);
       if i_ignore_err = false then raise; end if;
   end;
 
@@ -953,6 +953,25 @@ as
     gv_proc := 'pl.window_partitions';
     add_partitions(i_owner,i_table,i_date);
     drop_partition_lt(i_owner,i_table, i_date-i_window_size);
+  end;
+
+  procedure gather_table_stats(i_table varchar2, i_part_name varchar2 default null)
+  is
+    tokens dbms_sql.varchar2_table;
+    v_owner varchar2(100);
+    v_table varchar2(100);
+  begin
+    v_tokens := split(i_table, '.');
+    if v_tokens.length != 2 then
+      raise value_error;
+    end if;
+
+    v_owner := v_tokens(0);
+    v_table := v_tokens(1);
+    dbms_stats.gather_table_stats(
+      i_owner => v_owner,
+      i_table => v_table,
+      i_part_name => i_part_name);
   end;
 
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null)

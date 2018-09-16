@@ -5,22 +5,22 @@ create or replace type body logtype as
   ------------------------------------------------------------------------------
   -- BSD 2-Clause License
   -- Copyright (c) 2017, bluecolor All rights reserved.
-  -- Redistribution and use in source and binary forms, with or without modification, are permitted 
+  -- Redistribution and use in source and binary forms, with or without modification, are permitted
   -- provided that the following conditions are met:
-  -- 
-  -- * Redistributions of source code must retain the above copyright notice, 
+  --
+  -- * Redistributions of source code must retain the above copyright notice,
   -- this list of conditions and the following disclaimer.
-  -- 
-  -- * Redistributions in binary form must reproduce the above copyright notice, 
+  --
+  -- * Redistributions in binary form must reproduce the above copyright notice,
   -- this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
   --
-  -- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-  -- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
-  -- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY 
-  -- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-  -- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-  -- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-  -- STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+  -- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+  -- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  -- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+  -- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  -- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  -- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+  -- STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   -- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   ------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ create or replace type body logtype as
     return logtype(name, null, sysdate, null, null, null);
   end;
 
-  
+
   static function init(package_name varchar2 , proc_name varchar2 )  return logtype
   is
     name varchar2(100) := package_name ||'.'||proc_name;
@@ -62,7 +62,7 @@ create or replace type body logtype as
       self.end_date,
       self.message,
       self.statement
-    ); 
+    );
   end;
 
   ------------------------------------------------------------------------------
@@ -70,14 +70,14 @@ create or replace type body logtype as
   ------------------------------------------------------------------------------
   member procedure log(
     name      varchar2,
-    message   varchar2 default null, 
-    statement long default null, 
+    message   varchar2 default null,
+    statement long default null,
     log_level varchar2 default 'INFO'
   )
   is
     pragma autonomous_transaction;
     begin
-    self.name      := name; 
+    self.name      := name;
     self.message   := message;
     self.statement := statement;
     self.log_level := log_level;
@@ -107,6 +107,15 @@ create or replace type body logtype as
     log(self.name, message, statement, 'SUCCESS');
   end;
 
+  ------------------------------------------------------------------------------
+  -- log warning level messages
+  ------------------------------------------------------------------------------
+  member procedure warning(message varchar2, statement long  default null)
+  is
+    pragma autonomous_transaction;
+  begin
+    log(self.name, message, statement, 'WARNING');
+  end;
 
   ------------------------------------------------------------------------------
   -- log error level messages

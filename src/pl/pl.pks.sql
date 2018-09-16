@@ -24,21 +24,22 @@ as
     i_content_type varchar2 default 'text/plain'
   );
 
-  procedure sleep(P in number) 
-    as language java name 'java.lang.Thread.sleep(long)'; 
+  procedure sleep(P in number)
+    as language java name 'java.lang.Thread.sleep(long)';
 
   function is_number(i_str varchar2) return boolean;
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table;
 
   function parse_date (i_str varchar2) return date;
   function date_string(i_date date) return varchar2;
-  
+
   function table_exists(i_owner varchar2, i_table varchar2) return boolean;
 
   procedure truncate_table(i_table varchar2);
   procedure truncate_table(i_owner varchar2, i_table varchar2);
   procedure drop_table(i_table in varchar2, i_ignore_err boolean default true);
   procedure drop_table(i_owner varchar2, i_table varchar2, i_ignore_err boolean default true);
+  procedure gather_table_stats(i_table varchar2, i_part_name varchar2 default null);
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null);
   procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE');
   procedure enable_constraints(i_owner varchar2, i_table varchar2);
@@ -51,7 +52,7 @@ as
   procedure drop_constraint(i_owner varchar2, i_table varchar2, i_constraint varchar2);
   procedure add_unique_constraint(i_owner varchar2, i_table varchar2, i_col_list varchar2, i_constraint varchar2);
 
-  -- partition management  
+  -- partition management
   procedure add_partitions(i_owner varchar2, i_table varchar2,i_date date);
   procedure add_partition (i_owner varchar2, i_table varchar2);
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2);
@@ -59,15 +60,15 @@ as
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_date date, i_num_part number);
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date default sysdate );
   procedure drop_partition(i_owner varchar2, i_table varchar2, i_partition varchar2);
-  procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date);  
-  procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date);  
-  procedure drop_partition_gt (i_owner varchar2, i_table varchar2, i_date date);  
+  procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date);
+  procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date);
+  procedure drop_partition_gt (i_owner varchar2, i_table varchar2, i_date date);
   procedure drop_partition_gte(i_owner varchar2, i_table varchar2, i_date date);
   procedure drop_partition_btw(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date);
   procedure window_partitions(i_owner varchar2, i_table varchar2, i_date date, i_window_size number);
   procedure exchange_partition(
-    i_owner     varchar2, 
-    i_table_1   varchar2, 
+    i_owner     varchar2,
+    i_table_1   varchar2,
     i_part_name varchar2,
     i_table_2   varchar2,
     i_validate  boolean default false
@@ -84,8 +85,8 @@ as
   ------------------------------------------------------------------------------
   -- metadata
   function ddl(
-    i_name varchar2, 
-    i_schema varchar2 default null, 
+    i_name varchar2,
+    i_schema varchar2 default null,
     i_dblk varchar2 default null,
     i_type varchar2 default 'TABLE'
   ) return clob;
@@ -105,7 +106,7 @@ as
   procedure printl(i_message varchar2);
   procedure p(i_message varchar2);
   procedure print(i_message varchar2);
-  
+
 
 
 end;
