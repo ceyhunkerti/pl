@@ -9,6 +9,11 @@ as
   );
 
   type attachments is table of attachment;
+  type varchar2_table is table of varchar2(4000);
+
+  function make_string(
+    i_data varchar2_table,
+    i_delimiter varchar2 default ',') return varchar2;
 
   procedure send_mail (
     i_from varchar2,

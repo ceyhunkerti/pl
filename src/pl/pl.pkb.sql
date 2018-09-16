@@ -27,6 +27,23 @@ as
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
 
+
+  function make_string(
+    i_data varchar2_table,
+    i_delimiter varchar2 default ','
+  ) return varchar2
+  is
+    v_string     VARCHAR2(32767);
+  begin
+    for i in i_data.first .. i_data.last loop
+      if i != i_data.first then
+        v_string := v_string || i_delimiter;
+      end if;
+      v_string := v_string || i_data(i);
+    end loop;
+    return v_string;
+  end;
+
   procedure send_mail (
     i_from varchar2,
     i_to varchar2,
@@ -957,21 +974,22 @@ as
 
   procedure gather_table_stats(i_table varchar2, i_part_name varchar2 default null)
   is
-    tokens dbms_sql.varchar2_table;
+    v_tokens dbms_sql.varchar2_table;
     v_owner varchar2(100);
     v_table varchar2(100);
   begin
     v_tokens := split(i_table, '.');
-    if v_tokens.length != 2 then
+    if v_tokens.count != 2 then
       raise value_error;
     end if;
 
     v_owner := v_tokens(0);
     v_table := v_tokens(1);
     dbms_stats.gather_table_stats(
-      i_owner => v_owner,
-      i_table => v_table,
-      i_part_name => i_part_name);
+      v_owner,
+      v_table,
+      partname => i_part_name,
+      cascaDE  => true);
   end;
 
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null)
