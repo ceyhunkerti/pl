@@ -15,6 +15,20 @@ as
     i_data varchar2_table,
     i_delimiter varchar2 default ',') return varchar2;
 
+
+  procedure exec(i_sql varchar2, i_silent boolean default false);
+
+  procedure exec_silent(i_sql varchar2);
+
+  procedure send_mail(
+    i_from      varchar2,
+    i_to        varchar2,
+    i_subject   varchar2,
+    i_message   varchar2,
+    i_mime_type varchar2 default 'text/plain; charset=iso-8859-9',
+    i_async     boolean default true
+  );
+
   procedure send_mail (
     i_from varchar2,
     i_to varchar2,

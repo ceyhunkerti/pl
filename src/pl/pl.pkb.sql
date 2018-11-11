@@ -1,6 +1,8 @@
 CREATE OR REPLACE package body UTIL.pl
 as
   ------------------------------------------------------------------------------
+  -- https://github.com/bluecolor/pl
+  ------------------------------------------------------------------------------
   -- License
   ------------------------------------------------------------------------------
   -- This work is licensed under a Creative Commons Attribution 4.0 International License.
@@ -27,6 +29,18 @@ as
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
 
+  procedure exec(i_sql varchar2, i_silent boolean default false) is
+  begin
+    execute immediate i_sql;
+  exception when others then
+    logger.error(SQLERRM, i_sql);
+    if i_silent != true then raise; end if;
+  end;
+
+  procedure exec_silent(i_sql varchar2) is
+  begin
+    pl.exec(i_sql, true);
+  end;
 
   function make_string(
     i_data varchar2_table,
@@ -42,6 +56,37 @@ as
       v_string := v_string || i_data(i);
     end loop;
     return v_string;
+  end;
+
+  --! implement escape strings (')
+  procedure send_mail(
+    i_from      varchar2,
+    i_to        varchar2,
+    i_subject   varchar2,
+    i_message   varchar2,
+    i_mime_type varchar2 default 'text/plain; charset=iso-8859-9',
+    i_async     boolean default true
+  ) is
+    v_sql varchar2(4000);
+  begin
+    if i_async = false then
+      UTL_MAIL.send (
+        sender     => i_from,
+        recipients => i_to,
+        subject    => i_subject,
+        MESSAGE    => i_message,
+        MIME_TYPE  => i_mime_type);
+    else
+      v_sql := '
+        UTL_MAIL.send (
+          sender     => '''|| i_from      || ''',
+          recipients => '''|| i_to        || ''',
+          subject    => '''|| i_subject   || ''',
+          MESSAGE    => '''|| i_message   || ''',
+          MIME_TYPE  => '''|| i_mime_type || ''');
+      ';
+      pl.async_exec(v_sql, 'send_mail');
+    end if;
   end;
 
   procedure send_mail (
@@ -1153,7 +1198,7 @@ as
   is
   begin
     dbms_scheduler.create_job (
-      job_name      =>  i_name,
+      job_name      =>  i_name ||'_'|| to_char(systimestamp, 'ff4AM'),
       job_type      =>  'PLSQL_BLOCK',
       job_action    =>  'BEGIN ' || i_sql || ' END;',
       start_date    =>  sysdate,

@@ -32,6 +32,8 @@
       GRANT SELECT ON sys.v_$session TO util;
 
       GRANT SELECT ON sys.v_$locked_object to util;
+
+      GRANT execute on sys.UTL_MAIL to util;
     ```
 
   * Change the current schema to **util**
