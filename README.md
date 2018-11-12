@@ -61,53 +61,67 @@
 
 ### API
 
+  * **exec**
+  ```sql
+  -- execute given statement, raise exception if i_silent is set to false
+  --
+  -- Args:
+  --    [i_sql varchar2]: statement to execute
+  --    [i_silent boolean = False]: raise exception if i_silent is set to false, defaults to `False`
+  procedure exec(i_sql varchar2, i_silent boolean default false);
+  ```
+
+  * **exec_silent**
+  ```sql
+  -- execute given statement and ignore error
+  --
+  -- Args:
+  --    [i_sql varchar2]: statement to execute
+  procedure exec_silent(i_sql varchar2);
+  ```
+
   * **parse_date**
     ```sql
+    -- parse given string to date
+    --
+    -- Args:
+    --    [i_str number]: date in string
     function parse_date (i_str varchar2) return date
     ```
 
-    ```sql
-    parse given string to date
-
-    Arguments:
-       [i_str] (number): date in string
-    ```
-
-
   * **sleep**
     ```sql
+    -- Sleep given number of milliseconds. !DOES NOT uses dbms_lock
+    --
+    -- Args:
+    --    [i_millis number]: milliseconds
+    -- Returns:
+    --    date: Returns date value of the given string
     procedure sleep(i_millis in number)
-    ```
-
-    ```sql
-    Sleep given number of milliseconds. !DOES NOT uses dbms_lock
-
-    Arguments:
-       [i_millis] (number): milliseconds
-    Returns
-       (date): Returns date value of the given string
     ```
 
 
   * **is_number**
-
     ```sql
+    -- Checks if string is classified as a Number or not.
+    --
+    -- Args:
+    --    [i_str varchar2 = '']: The string to check.
+    -- Returns
+    --    boolean: Returns true if string is numeric.
     function is_number(i_str varchar2) return boolean
     ```
 
-    ```sql
-    Checks if string is classified as a Number or not.
-
-    Arguments:
-       [i_str='']    (varchar2): The string to check.
-    Returns
-       (boolean): Returns true if string is numeric.
-    ```
-
-
   * **split**
-
     ```sql
+    -- Splits string by separator.
+    --
+    -- Args:
+    --    [i_str varchar2 = '']: The string to split.
+    --    [i_split varchar2 = ',']: The separator pattern to split by.
+    --    [i_limit number = null]: The length to truncate results to.
+    -- Returns:
+    --    varchar2_table: Returns the string segments.
     function split(
       i_str varchar2,
       i_split varchar2 default ',',
@@ -115,326 +129,255 @@
     ) return dbms_sql.varchar2_table
     ```
 
-    ```sql
-      Splits string by separator.
-
-      Arguments:
-         [i_str='']    (varchar2): The string to split.
-         [i_split=','] (varchar2): The separator pattern to split by.
-         [i_limit]     (number): The length to truncate results to.
-      Returns
-         (varchar2_table): Returns the string segments.
-    ```
-
-
   * **date_string**
-
     ```sql
+    -- Returns a date as string containing to_date function.
+    -- Useful when used with 'execute immediate'
+    --
+    -- Args:
+    --    [i_date date]: The date object to convert to string to_char representation.
+    -- Returns:
+    --   varchar2: the date function string
+    --   example return value: `'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')'`
     function date_string(i_date date) return varchar2
     ```
 
-    ```sql
-    Returns a date as string containing to_date function.
-    Useful when used with 'execute immediate'
-
-    Arguments:
-       [i_date] (date): The date object.
-    Returns:
-       (varchar2): the date function string
-       example: 'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')'
-    ```
-
   * **truncate_table**
-
     ```sql
+    -- Truncates the given table
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
     procedure truncate_table(i_owner varchar2, i_table varchar2)
     ```
 
+  * **truncate_table**
     ```sql
-    Truncates the given table
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
+    -- Truncates the given table
+    --
+    -- Args:
+    --    [i_table varchar2]: Schema and Name of the table eg. `owner.table_name`
+    procedure truncate_table(i_table varchar2)
     ```
 
   * **drop_table**
-
-    ```
+    ```sql
+    -- Drops the given table
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [pib_ignore_err boolean = true]: when set to false raises error
     procedure drop_table(i_owner varchar2, i_table varchar2, pib_ignore_err boolean default true);
     ```
 
+  * **drop_table**
     ```sql
-    Drops the given table
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [pib_ignore_err=true] (boolean): when set to false raises error
+    -- Drops the given table
+    --
+    -- Args:
+    --    [i_table varchar2]: Schema and Name of the table eg: `owner.table_name`
+    procedure drop_table(i_table varchar2);
     ```
 
   * **table_exists**
-
     ```sql
+    -- Checks whether the given table exists or not
+    --
+    -- Args:
+    --    [i_owner varchar2]
+    --    [i_table varchar2]: Name of the table
+    -- Returns:
+    --    boolean: True if table exists
     function table_exists(i_owner varchar2, i_table varchar2) return boolean;
     ```
 
-    ```sql
-    Checks whether the given table exists or not
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-    Returns:
-       (boolean): true if table exists
-    ```
-
   * **gather_table_stats**
-
     ```sql
+    -- Gather table/partition statistics
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_part_name varchar2 = null]: Name of the partition defaults to `null`
     procedure gather_table_stats(
       i_owner varchar2,
       i_table varchar2,
       i_part_name varchar2 default null)
     ```
 
-    ```sql
-    Gather table/partition statistics
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_part_name] (varchar2): Name of the partition defaults to null
-    ```
-
   * **manage_constraints**
-
     ```sql
+    -- Enable/Disable constraints for the given table.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_order varchar2 = 'enable']: DISABLE|ENABLE
     procedure manage_constraints(
       i_owner varchar2,
       i_table varchar2,
       i_order varchar2 default 'enable')
     ```
 
-    ```sql
-    Enable/Disable constraints for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_order] (varchar2): DISABLE|ENABLE
-    ```
-
   * **enable_constraints**
-
     ```sql
-    procedure enable_constraints(
-      i_owner varchar2,
-      i_table varchar2)
-    ```
-
-    ```sql
-    Enable constraints for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
+    -- Enable constraints for the given table.s
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    procedure enable_constraints(i_owner varchar2, i_table varchar2)
     ```
 
   * **disable_constraints**
-
     ```sql
-    procedure disable_constraints(
-      i_owner varchar2,
-      i_table varchar2)
-    ```
-
-    ```sql
-    Disable constraints for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
+    -- Disable constraints for the given table.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    procedure disable_constraints(i_owner varchar2, i_table varchar2)
     ```
 
   * **manage_indexes**
-
     ```sql
+    -- Unusable/Rebuild indexes for the given table.
+    --
+    -- Args:
+    --  [i_owner varchar2]: Schema of the table
+    --  [i_table varchar2]: Name of the table
+    --  [i_order varchar2 = 'enable']: DISABLE|ENABLE
+    --    DISABLE makes the indexes unusable
+    --    ENABLE rebuilds the indexes
     procedure manage_indexes(
       i_owner varchar2,
       i_table varchar2,
       i_order varchar2 default 'enable')
     ```
 
-    ```sql
-    Unusable/Rebuild indexes for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_order] (varchar2): DISABLE|ENABLE
-        DISABLE makes the indexes unusable
-        ENABLE rebuilds the indexes
-    ```
-
   * **enable_indexes**
-
     ```sql
-    procedure enable_indexes(
-      i_owner varchar2,
-      i_table varchar2)
-    ```
+    -- Rebuild indexes for the given table.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
 
-    ```sql
-    Rebuild indexes for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
+    procedure enable_indexes(i_owner varchar2, i_table varchar2)
     ```
 
   * **disable_indexes**
-
     ```sql
-    procedure disable_indexes(
-      i_owner varchar2,
-      i_table varchar2)
-    ```
-
-    ```sql
-    Make indexes unusable for the given table.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
+    -- Make indexes unusable for the given table.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    procedure disable_indexes(i_owner varchar2, i_table varchar2)
     ```
 
   * **add_partitions**
-
     ```sql
+    -- Adds partitions to the given table up to the date given by the `i_date` parameter.
+    --
+    -- Args:
+    --    [i_owner varchar2: Schema of the table
+    --    [i_table varchar2: Name of the table
+    --    [i_date date]: the date up to partitions will be added
     procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date)
     ```
 
-    ```sql
-    Adds partitions to the given table up to the date given by the 'i_date' parameter.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (date): the date up to partitions will be added
-    ```
-
   * **add_partition**
-
     ```sql
+    -- Adds a single partition to the given table with the date given by the 'i_date' parameter.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_date date]: the date partition will be created for
     procedure add_partition (i_owner varchar2, i_table varchar2,i_date date)
     ```
 
-    ```sql
-    Adds a single partition to the given table with the date given by the 'i_date' parameter.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (date): the date partition will be created for
-    ```
-
   * **truncate_partition**
-
-    ```
+    ```sql
+    -- Truncates the given partition.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_partition varchar2]: name of the partition
     procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
     ```
 
-    ```sql
-    Truncates the given partition.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_partition] (varchar2): name of the partition
-    ```
-
   * **drop_partition**
-
-    ```
+    ```sql
+    -- Drops the given partition.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_partition varchar2]: name of the partition
     procedure drop_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
     ```
 
-    ```sql
-    Drops the given partition.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_partition] (varchar2): name of the partition
-    ```
-
   * **drop_partition_lt**
-
     ```sql
+    -- Drops partitions less than the given date.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_date varchar2]: date boundary
     procedure drop_partition_lt (i_owner varchar2, i_table varchar2, i_date date);
     ```
 
-    ```sql
-    Drops partitions less than the given date.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary
-    ```
-
-
   * **drop_partition_lte**
-
     ```sql
+    -- Drops partitions less than or equal to the given date.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_date varchar2]: date boundary
     procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date)
     ```
-
-    ```sql
-    Drops partitions less than or equal to the given date.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary
-    ```
-
 
   * **drop_partition_gt**
 
     ```sql
+    -- Drops partitions greater than the given date.
+    --
+    -- Args:
+    --    [i_owner varchar2): Schema of the table
+    --    [i_table varchar2): Name of the table
+    --    [i_date varchar2): date boundary
     procedure drop_partition_gt (i_owner varchar2, i_table varchar2, i_date date)
     ```
 
-    ```sql
-    Drops partitions greater than the given date.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary
-    ```
-
-
   * **drop_partition_gte**
-
     ```sql
+    -- Drops partitions greater than or equal to the given date.
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_date varchar2]: date boundary
     procedure drop_partition_gte (i_owner varchar2, i_table varchar2, i_date date)
     ```
 
-    ```sql
-    Drops partitions greater than or equal to the given date.
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary
-    ```
-
   * **window_partitions**
-
     ```sql
+    -- Manages partitions for the given table by fitting the partitions to the given date with i_date parameter
+    -- and given number by i_number_size parameter. Basically it adds partitions until i_date and drops partitions
+    -- older than i_window_size * (year|month|day)
+    --
+    -- Args:
+    --   [i_owner varchar2]: Schema of the table
+    --   [i_table varchar2]: Name of the table
+    --   [i_date varchar2]: date boundary
+    --   [i_window_size number]: number of partitions to keep
     procedure window_partitions(
       i_owner varchar2,
       i_table varchar2,
@@ -442,121 +385,86 @@
       i_window_size number)
     ```
 
-    ```sql
-    Manages partitions for the given table by fitting the partitions to the given date with i_date parameter
-    and given number by i_number_size parameter. Basically it adds partitions until i_date and drops partitions
-    older than i_window_size * (year|month|day)
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_date] (varchar2): date boundary
-       [i_window_size] (number): number of partitions to keep
-    ```
-
   * **exchange_partition**
-
     ```sql
-      procedure exchange_partition(
-        i_owner     varchar2,
-        i_table_1   varchar2,
-        i_part_name varchar2,
-        i_table_2   varchar2,
-        pib_validate  boolean default false
-      );
-    ```
-
-    ```sql
-    Exchanges partition of table_1 with the table_2
-
-    Arguments:
-       [i_owner] (varchar2): Schema of the table
-       [i_table] (varchar2): Name of the table
-       [i_part_name] (varchar2): partitions to be exchanged
-       [i_table_2] (varchar2): table to replace partition
-       [pib_validate=false] (boolean): validate partition after exchange
+    -- Exchanges partition of table_1 with the table_2
+    --
+    -- Args:
+    --    [i_owner varchar2]: Schema of the table
+    --    [i_table varchar2]: Name of the table
+    --    [i_part_name varchar2]: partitions to be exchanged
+    --    [i_table_2 varchar2]: table to replace partition
+    --    [pib_validate boolean =false]: validate partition after exchange
+    procedure exchange_partition(
+      i_owner     varchar2,
+      i_table_1   varchar2,
+      i_part_name varchar2,
+      i_table_2   varchar2,
+      pib_validate  boolean default false
+    );
     ```
 
   * **enable_parallel_dml**
-
     ```sql
+    -- Enable parallel dml for the current session.
     procedure enable_parallel_dml
     ```
-
-    ```sql
-    Enable parallel dml for the current session.
-    ```
-
 
   * **disable_parallel_dml**
 
     ```sql
+    -- Disable parallel dml for the current session.
     procedure disable_parallel_dml
-    ```
-
-    ```sql
-    Disable parallel dml for the current session.
     ```
 
 
   * **async_exec**
-
     ```sql
+      -- Execute given statement asynchronously.
+      --
+      -- Args:
+      --    [i_sql varchar2]: Statement to execute
+      --    [i_name varchar2 = 'ASYNC_EXEC']: Name of the dbms job entry
+
       procedure async_exec(i_sql varchar2, i_name varchar2 default 'ASYNC_EXEC')
-    ```
-
-    ```sql
-    Execute given statement asynchronously.
-
-    Arguments:
-       [i_sql] (varchar2): Statement to execute
-       [i_name ='ASYNC_EXEC'] (varchar2): Name of the dbms job entry
     ```
 
   * **set_param**
     ```sql
+      -- Set parameter on `params` table
+      --
+      -- Args:
+      --    [i_name varchar2]: parameter name
+      --    [i_value varchar2]: parameter value
       procedure set_param(i_name varchar2, i_value)
-    ```
-
-    ```sql
-    Set parameter on `params` table
-
-    Arguments:
-      [i_name] (varchar2): parameter name
-      [i_value] (varchar2): parameter value
     ```
 
   * **find_param**
     ```sql
+      -- Find given parameter
+      --
+      -- Args:
+      --    [i_name varchar2]: parameter name
+      -- Returns
+      --    varchar2: Returns parameter value
       procedure find_param(i_name varchar2)
-    ```
-
-    ```sql
-    Find given parameter
-
-    Arguments:
-      [i_name] (varchar2): parameter name
-    Returns
-      (varchar2): Returns parameter value
     ```
 
   * **param_exists**
     ```sql
-      procedure param_exists(i_name varchar2)
-    ```
-
-    ```sql
-      Check whether given parameter exists.
-
-      Arguments:
-        [i_name] (varchar2): parameter name
-      Returns
-        (boolean): true if param exists false otherwise
+      -- Check whether given parameter exists.
+      -- Args:
+      --    [i_name] (varchar2): parameter name
+      --    boolean: true if param exists false otherwise
+      function param_exists(i_name varchar2) return boolean;
     ```
 
   * **send_mail**
-
     ```sql
+      -- Send mail to given recipients. Set mail server settings on `params` before
+      -- using this method!
+      -- Args:
+      --  ** Mail options
       procedure send_mail(
         i_to      varchar2,
         i_subject varchar2,
@@ -566,107 +474,75 @@
       )
     ```
 
-    ```sql
-      Send mail to given recipients. Set mail server settings on `params` before
-      using this method!
-    ```
-
   * **is_email**
     ```sql
+      -- Test given string is a valid email address
+      --
+      -- Args:
+      --   [i_email varchar2]: given email address
+      -- Returns:
+      --   boolean: true if input is a valid email address
       function is_email(i_email varchar2)
-    ```
-
-    ```sql
-      Arguments:
-        [i_email] (varchar2): given email address
-      Returns
-        (boolean): true if input is a valid email address
     ```
 
   * **ddl**
     ```sql
-        function ddl(
-          i_name varchar2,
-          i_schema varchar2 default null,
-          i_dblk varchar2 default null,
-          i_type varchar2 default 'TABLE'
-        ) return clob;
+      -- Retrieve metadata of the object(s). If only name is given returns all matching objects'' metadata
+      --
+      -- Args:
+      --    [i_name varchar2]: name of the object
+      --    [i_schema varchar2]: owner of the object
+      --    [i_dblk varchar2]: db-link for remote objects
+      --    [i_type varchar2 ='TABLE']: object type
+      -- Returns
+      --    boolean: true if param exists false otherwise
+      function ddl(
+        i_name varchar2,
+        i_schema varchar2 default null,
+        i_dblk varchar2 default null,
+        i_type varchar2 default 'TABLE'
+      ) return clob;
     ```
-
-    ```sql
-      Returns metadata of the object(s). If only name is given returns all matching objects'' metadata
-      Arguments:
-        [i_name] (varchar2): name of the object
-        [i_schema] (varchar2): owner of the object
-        [i_dblk] (varchar2): db-link for remote objects
-        [i_type='TABLE'] (varchar2): object type
-      Returns
-        (boolean): true if param exists false otherwise
-
-    ```
-
 
   * **print_locks**
-
     ```sql
+    -- Print locked objects.
     procedure print_locks
     ```
 
-    ```sql
-    Print locked objects.
-    ```
-
-
 
   * **println**
-
     ```sql
+    -- Print to dbms out. Shortcut for dbms_output.put_line
+    --
+    -- Args:
+    --    [i_message varchar2]: Message to print
     procedure println(i_message varchar2);
     ```
 
-    ```sql
-    Print to dbms out. Shortcut for dbms_output.put_line
-
-    Arguments:
-       [i_message] (varchar2): Message to print
-    ```
-
-
   * **printl**
-
     ```sql
+    -- Print to dbms out. Shortcut for dbms_output.put_line
+    --
+    -- Args:
+    --    [i_message varchar2]: Message to print
     procedure printl(i_message varchar2);
     ```
 
-    ```sql
-    Print to dbms out. Shortcut for dbms_output.put_line
-
-    Arguments:
-       [i_message] (varchar2): Message to print
-    ```
-
   * **p**
-
     ```sql
+    -- Print to dbms out. Shortcut for dbms_output.put_line
+    --
+    -- Args:
+    --    [i_message varchar2]: Message to print
     procedure p(i_message varchar2);
     ```
 
-    ```sql
-    Print to dbms out. Shortcut for dbms_output.put_line
-
-    Arguments:
-       [i_message] (varchar2): Message to print
-    ```
-
   * **print**
-
     ```sql
+    -- Print to dbms out. Shortcut for dbms_output.put_line
+    --
+    -- Args:
+    --    [i_message] (varchar2): Message to print
     procedure print(i_message varchar2);
-    ```
-
-    ```sql
-    Print to dbms out. Shortcut for dbms_output.put
-
-    Arguments:
-       [i_message] (varchar2): Message to print
     ```
