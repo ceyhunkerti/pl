@@ -29,6 +29,14 @@ as
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- execute given statement, raise exception if i_silent is set to false
+  --
+  -- Args:
+  --    [i_sql varchar2]: statement to execute
+  --    [i_silent boolean = False]: raise exception if i_silent is set to false, defaults to `False`
+  ----------------------------------------------------------------------------------------------
   procedure exec(i_sql varchar2, i_silent boolean default false) is
   begin
     execute immediate i_sql;
@@ -37,15 +45,42 @@ as
     if i_silent != true then raise; end if;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- execute list of statements, raise exception if i_silent is set to false
+  --
+  -- Args:
+  --    [i_sql dbms_sql.varchar2_table]: list of statements to execute
+  --    [i_silent boolean = False]: raise exception if i_silent is set to false, defaults to `False`
+  ----------------------------------------------------------------------------------------------
+  procedure exec(i_sql dbms_sql.varchar2_table, i_silent boolean default false) is
+  begin
+    for i in 1 .. i_sql.count loop
+      pl.exec(i_sql(i), i_silent);
+    end loop;
+  end;
+
+
+  ----------------------------------------------------------------------------------------------
+  -- execute given statement and ignore error
+  --
+  -- Args:
+  --    [i_sql varchar2]: statement to execute
+  ----------------------------------------------------------------------------------------------
   procedure exec_silent(i_sql varchar2) is
   begin
     pl.exec(i_sql, true);
   end;
 
-  function make_string(
-    i_data varchar2_table,
-    i_delimiter varchar2 default ','
-  ) return varchar2
+
+  ----------------------------------------------------------------------------------------------
+  -- make string from list of strings
+  --
+  -- Args:
+  --    [i_sql varchar2_table]: list of strings
+  --    [i_delimiter varchar2 = ','] delimiter
+  ----------------------------------------------------------------------------------------------
+  function make_string(i_data varchar2_table, i_delimiter varchar2 default ',' ) return varchar2
   is
     v_string     VARCHAR2(32767);
   begin
@@ -58,7 +93,14 @@ as
     return v_string;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- Send mail to given recipients. Set mail server settings on `params` before
+  -- using this method!
+  -- Args:
+  --  ** Mail options
   --! implement escape strings (')
+  ----------------------------------------------------------------------------------------------
   procedure send_mail(
     i_from      varchar2,
     i_to        varchar2,
@@ -89,108 +131,13 @@ as
     end if;
   end;
 
-  procedure send_mail (
-    i_from varchar2,
-    i_to varchar2,
-    i_cc varchar2 default '',
-    i_subject varchar2,
-    i_body varchar2,
-    i_attachments attachments default null,
-    i_host varchar2,
-    i_port number default 25,
-    i_username varchar2 default null,
-    i_password varchar2  default null,
-    i_content_type varchar2 default 'text/plain'
-  ) is
-    v_to varchar2(1000) := '';
-    v_cc varchar2(1000) := '';
-    v_connection utl_smtp.connection;
-    v_tokens dbms_sql.varchar2_table;
-    v_buffer number;
-    v_amount number:= 1900;
-    v_username_b64 varchar2(10000) := utl_raw.cast_to_varchar2(
-      utl_encode.base64_encode(utl_raw.cast_to_raw(i_username))
-    );
-    v_password_b64 varchar2(10000) := utl_raw.cast_to_varchar2(
-      utl_encode.base64_encode(utl_raw.cast_to_raw(i_password))
-    );
-  begin
-    v_connection := utl_smtp.open_connection(i_host);
 
-    utl_smtp.ehlo(v_connection, i_host); -- Must use EHLO vs HELO
-    if i_username is not null and i_password is not null then
-      utl_smtp.command(v_connection, 'AUTH', 'LOGIN');  -- should receive a 334 response, prompting for username
-      utl_smtp.command(v_connection, v_username_b64);   -- should receive a 334 response, prompting for password
-      utl_smtp.command(v_connection, v_password_b64);   -- should receive a 235 response, you are authenticated
-    end if;
-
-    v_to := replace(i_to, ' ');
-    v_to := replace(v_to, ',', ';');
-    v_tokens := split(v_to, ';');
-
-    for i in v_tokens.first .. v_tokens.last loop
-      utl_smtp.rcpt(v_connection, v_tokens(i));
-    end loop;
-
-    v_cc := replace(i_cc, ' ');
-    v_cc := replace(v_cc, ',', ';');
-    v_tokens := split(v_cc, ';');
-
-    for i in v_tokens.first .. v_tokens.last loop
-      utl_smtp.rcpt(v_connection, v_tokens(i));
-    end loop;
-
-    utl_smtp.open_data(v_connection);
-
-    utl_smtp.write_data(
-      v_connection,
-      'Subject: =?UTF-8?Q?'||
-        utl_raw.cast_to_varchar2(utl_encode.quoted_printable_encode(utl_raw.cast_to_raw(i_subject)))||
-        '?='|| utl_tcp.crlf
-    );
-
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('To: ' || v_to || UTL_TCP.crlf));
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('Cc: ' || v_cc || UTL_TCP.crlf));
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('Date: ' || to_char(sysdate, 'Dy, DD Mon YYYY hh24:mi:ss') || utl_tcp.crlf));
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('From: ' || i_from || UTL_TCP.crlf));
-
-    utl_smtp.write_data(v_connection, 'MIME-version: 1.0' || utl_tcp.crlf);
-    utl_smtp.write_raw_data(v_connection,
-      utl_raw.cast_to_raw('Content-Type:multipart/mixed;;charset=ISO-8859-9; boundary="SECBOUND"' ||
-      utl_tcp.crlf || utl_tcp.crlf)
-    );
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND'|| utl_tcp.crlf));
-    utl_smtp.write_data(v_connection, 'Content-Type: '||i_content_type||';charset=ISO-8859-9' || utl_tcp.crlf);
-    utl_smtp.write_data(v_connection, 'Content-Transfer-Encoding: 8bit'|| utl_tcp.crlf);
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw(utl_tcp.crlf || i_body || utl_tcp.crlf));
-    utl_smtp.write_data(v_connection, utl_tcp.crlf);
-
-    if i_attachments is not null then
-      for i in i_attachments.first .. i_attachments.last loop
-        utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND' || utl_tcp.crlf));
-        utl_smtp.write_raw_data(v_connection,
-          utl_raw.cast_to_raw('Content-Type: ' || i_attachments(i).data_type
-          ||' name="'|| i_attachments(i).name || '"' || UTL_TCP.crlf)
-        );
-        utl_smtp.write_raw_data(v_connection,
-          utl_raw.cast_to_raw('Content-Disposition: attachment; filename="'||
-          i_attachments(i).name || '"' || utl_tcp.crlf || UTL_TCP.crlf)
-        );
-        v_buffer := 1;
-        while v_buffer < dbms_lob.getlength(i_attachments(i).content) loop
-          utl_smtp.write_raw_data(v_connection,
-            utl_raw.cast_to_raw(dbms_lob.substr(i_attachments(i).content, v_amount, v_buffer)));
-            v_buffer := v_buffer + v_amount;
-        end loop;
-        utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw(''||utl_tcp.crlf));
-      end loop;
-    end if;
-
-    utl_smtp.write_raw_data(v_connection, utl_raw.cast_to_raw('--SECBOUND--' || utl_tcp.crlf));
-    utl_smtp.close_data(v_connection);
-    utl_smtp.quit(v_connection);
-  end;
-
+  ----------------------------------------------------------------------------------------------
+  -- parse given string to date
+  --
+  -- Args:
+  --    [i_str number]: date in string
+  ----------------------------------------------------------------------------------------------
   function parse_date (i_str varchar2) return date
   as
     v_result date;
@@ -230,9 +177,16 @@ as
     return v_result;
   end;
 
-  ------------------------------------------------------------------------------
-  -- check if table exists
-  ------------------------------------------------------------------------------
+
+  ----------------------------------------------------------------------------------------------
+  -- Checks whether the given table exists or not
+  --
+  -- Args:
+  --    [i_owner varchar2]: owner of the table
+  --    [i_table varchar2]: name of the table
+  -- Returns:
+  --    boolean: True if table exists
+  ----------------------------------------------------------------------------------------------
   function table_exists(i_owner varchar2, i_table varchar2) return boolean
   IS
     v_proc varchar2(1000) := gv_package || '.table_exists';
@@ -253,14 +207,21 @@ as
       raise;
   end;
 
+
+
+  ----------------------------------------------------------------------------------------------
+  -- Find the prefix of the partition
+  --
+  -- Args:
+  --    [i_part_name varchar2] name of the partition
+  -- Returns:
+  --    varchar2: partition prefix. eg. if `i_part_name` is `P20201901` then prefix is `P`
+  ----------------------------------------------------------------------------------------------
   function find_partition_prefix(i_part_name varchar2) return varchar2
   is
     v_chr char(2);
     v_part_prefix varchar2(10) := '';
   begin
-
-    --printl('v_part_name: ' || i_part_name);
-
     for i in 1 .. length(i_part_name) loop
       v_chr := substr(i_part_name,i,1);
       if(is_number(v_chr)) then
@@ -269,22 +230,20 @@ as
         v_part_prefix := v_part_prefix || v_chr;
       end if;
     end loop;
-
-    --printl('part prefix: ' || v_part_prefix);
-
     return trim(v_part_prefix);
   end;
 
 
-
+  ----------------------------------------------------------------------------------------------
+  -- Used in partition manipulation
+  -- Find the previous high value for the given value, according to given value type
+  ----------------------------------------------------------------------------------------------
   function find_prev_high_value(i_range_type char, i_next_high_val long) return long
   is
     v_high_date date;
     v_return long;
   begin
-
     v_high_date := parse_date(i_next_high_val);
-
     v_return := case i_range_type
         when 'd' then to_char(v_high_date-1,'yyyymmdd')
         when 'm' then to_char(add_months(v_high_date,-1),'yyyymm')
@@ -293,15 +252,18 @@ as
     end;
 
     return v_return;
-
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- Used in partition manipulation
+  -- Find the next high value for the given value, according to given value type
+  ----------------------------------------------------------------------------------------------
   function find_next_high_value(i_range_type char, i_prev_high_val long) return long
   is
     v_high_date date;
     v_return long;
   begin
-
     v_high_date := parse_date(i_prev_high_val);
 
     v_return := case i_range_type
@@ -310,11 +272,23 @@ as
         when 'y' then to_char(add_months(v_high_date,12),'yyyy')
         else date_string(v_high_date+1)
     end;
-
     return v_return;
-
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- Find range type of the partition for the given table
+  --
+  -- Args:
+  --    [i_owner varchar2]: table owner
+  --    [i_table varchar2]: table name
+  -- Returns:
+  --    varchar2: range type
+  --    `D`: Date day
+  --    `d`: number day
+  --    `m`: number month
+  --    `y`: number year
+  ----------------------------------------------------------------------------------------------
   function find_partition_range_type(i_owner varchar2, i_table varchar2) return char
   is
     v_part_name varchar2(100);
@@ -353,6 +327,8 @@ as
     return v_range_type;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
   -- Splits string by separator.
   -- Arguments:
   --    [i_str='']    (varchar2): The string to split.
@@ -360,6 +336,7 @@ as
   --    [i_limit]     (number): The length to truncate results to.
   -- Returns
   --    (varchar2_table): Returns the string segments.
+  ----------------------------------------------------------------------------------------------
   function split(i_str varchar2, i_split varchar2 default ',', i_limit number default null) return dbms_sql.varchar2_table
   is
     i number := 0;
@@ -386,13 +363,22 @@ as
     return v_res;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- Find minimum, lowest, partition in this table
+  --
+  -- Args:
+  --    [i_owner varchar2]: table owner
+  --    [i_table varchar2]: table name
+  -- Returns:
+  --    long: min partition
+  ----------------------------------------------------------------------------------------------
   function find_min_partition(i_owner varchar2, i_table varchar2) return long
   is
     v_part long;
     v_partition_name varchar2(20);
     v_high_value varchar2(4000);
   begin
-
     select partition_name, high_value into v_partition_name, v_high_value
     from
       (
@@ -408,13 +394,22 @@ as
     return v_partition_name||':'||v_high_value;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- Find the top partition of given table
+  --
+  -- Args:
+  --    [i_owner varchar2]: table owner
+  --    [i_table varchar2]: table name
+  -- Returns:
+  --    long: max partition
+  ----------------------------------------------------------------------------------------------
   function find_max_partition(i_owner varchar2, i_table varchar2) return long
   is
     v_part long;
     v_partition_name varchar2(20);
     v_high_value varchar2(4000);
   begin
-
     select partition_name, high_value into v_partition_name, v_high_value
     from
       (
@@ -431,6 +426,15 @@ as
   end;
 
 
+  ----------------------------------------------------------------------------------------------
+  -- Find the partition column's type for the given table
+  --
+  -- Args:
+  --    [i_owner varchar2]: table owner
+  --    [i_table varchar2]: table name
+  -- Returns:
+  --    varchar2: partition column data type
+  ----------------------------------------------------------------------------------------------
   function find_partition_col_type(i_owner varchar2, i_table varchar2) return varchar2
   is
     v_col_data_type varchar2(100)  := 'DATE';
@@ -453,35 +457,49 @@ as
   end;
 
 
-
+  ----------------------------------------------------------------------------------------------
+  -- Checks if string is classified as a Number or not.
+  --
+  -- Args:
+  --    [i_str varchar2 = '']: The string to check.
+  -- Returns
+  --    boolean: Returns true if string is numeric.
+  ----------------------------------------------------------------------------------------------
   function is_number(i_str varchar2) return boolean
   is
   begin
     return case nvl(length(trim(translate(i_str, ' +-.0123456789', ' '))),0) when 0 then true else false end;
   end;
 
-  ------------------------------------------------------------------------------
+
+  ----------------------------------------------------------------------------------------------
   -- return a string representation of date object.
   -- this method is useful when you use dynamic sql with exec. immediate
   -- and want to use a date object in your dynamic sql string.
-  ------------------------------------------------------------------------------
+  --
+  -- Args:
+  --    [i_date date]: The date object to convert to string to_char representation.
+  -- Returns:
+  --   varchar2: the date function string
+  --   example return value: `'to_date(''20120101 22:12:00'',''yyyymmdd hh24:mi:ss'')'`
+  ----------------------------------------------------------------------------------------------
   function date_string(i_date date) return varchar2
   is
   begin
     return 'to_date('''||to_char(i_date, 'ddmmyyyy hh24:mi:ss')|| ''',''ddmmyyyy hh24:mi:ss'')';
   end;
 
+  -- escape single quota for given string
   function escape_sq(i_string varchar2) return varchar2
   is
   begin
     return replace(i_string, '''', '''''');
   end;
 
-
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- truncate table given with schema name, and table name
   -- eg. pl.truncate_table('UTIL.LOGS')
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure truncate_table(i_table in varchar2)
   is
     v_proc varchar2(1000) := gv_package || '.truncate_table';
@@ -495,10 +513,10 @@ as
       raise;
   end;
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- truncate table given with schema name, and table name
   -- eg. pl.truncate_table('UTIL','LOGS')
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure truncate_table(i_owner varchar2, i_table in varchar2)
   is
     v_proc varchar2(1000) := gv_package || '.truncate_table';
@@ -513,10 +531,10 @@ as
   end;
 
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- drop table given with schema name, and table name
   -- eg. pl.truncate_table('UTIL.LOGS') ignores errors if table not found
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure drop_table(i_table in varchar2, i_ignore_err boolean default true)
   is
     v_proc varchar2(1000) := gv_package || '.drop_table';
@@ -531,10 +549,10 @@ as
   end;
 
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- drop table given with schema name, and table name
   -- eg. pl.truncate_table('UTIL','LOGS') ignores errors if table not found
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure drop_table(i_owner varchar2, i_table in varchar2, i_ignore_err boolean default true)
   is
     v_proc varchar2(1000) := gv_package || '.drop_table';
@@ -550,9 +568,9 @@ as
   end;
 
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- enable parallel dml for the current session
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure enable_parallel_dml
   is
     v_proc varchar2(1000) := gv_package || '.enable_parallel_dml';
@@ -567,9 +585,9 @@ as
   end;
 
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- truncates given partition, raises error if partition not found.
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
   is
     v_proc varchar2(1000) := gv_package || '.truncate_partition';
@@ -605,9 +623,9 @@ as
       raise;
   end;
 
-    ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- truncates given partition, raises error if partition not found.
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_date date)
   is
     v_proc varchar2(1000) := gv_package || '.truncate_partition';
@@ -668,10 +686,10 @@ as
       raise;
   end;
 
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   -- truncates given partitions starting from date through number of patitions,
   -- raises error if partition not found.
-  ------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_date date, i_num_part number)
   is
     v_range_type  char(1):= 'd';
@@ -724,11 +742,10 @@ as
     raise;
   end;
 
-    ------------------------------------------------------------------------------
-    -- truncates given partitions starting from date through number of patitions,
-    -- raises error if partition not found.
-    ------------------------------------------------------------------------------
-
+  ----------------------------------------------------------------------------------------------
+  -- truncates given partitions starting from date through number of patitions,
+  -- raises error if partition not found.
+  ----------------------------------------------------------------------------------------------
   procedure truncate_partitions(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date default sysdate)
   is
     v_range_type  char(1):= 'D';
@@ -748,8 +765,11 @@ as
 
     v_part := find_max_partition(i_owner, i_table);
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
-    v_high_value  := ltrim(v_part, v_part_name||':');
+    v_high_value  := substr(v_part, instr(v_part, ':')+ 1);
 
+    pl.p(v_part);
+    pl.p(v_part_name);
+    pl.p(v_high_value);
 
     if v_partition_col_type = 'DATE' then
       gv_sql := 'select '||v_high_value||' from dual';
@@ -765,7 +785,7 @@ as
 
     v_part := find_min_partition(i_owner, i_table);
     v_part_name   := substr(v_part, 1, instr(v_part, ':')-1);
-    v_high_value  := ltrim(v_part, v_part_name||':');
+    v_high_value  := substr(v_part, instr(v_part, ':')+ 1);
 
     if v_partition_col_type = 'DATE' then
       gv_sql := 'select '||v_high_value||' from dual';
@@ -791,7 +811,16 @@ as
       order by partition_position desc
     )
     loop
-      gv_sql := 'select '||c1.high_value||' from dual';
+      if v_partition_col_type = 'DATE' then
+        gv_sql := 'select '||c1.high_value||' from dual';
+      elsif v_range_type = 'y' then
+        gv_sql := 'select to_date('|| to_char(c1.high_value) ||',''yyyy'') from dual';
+      elsif v_range_type = 'm' then
+        gv_sql := 'select to_date('|| to_char(c1.high_value) ||',''yyyymm'') from dual';
+      elsif v_range_type = 'd' then
+        gv_sql := 'select to_date('|| to_char(c1.high_value) ||',''yyyymmdd'') from dual';
+      end if;
+
       execute immediate gv_sql into v_part_date;
       if v_part_date-1 > parse_date(i_end_date)
         then continue;
@@ -807,6 +836,10 @@ as
       raise;
   end;
 
+
+  ----------------------------------------------------------------------------------------------
+  -- drop the table partitions applying the the i_operator filter to partition value.
+  ----------------------------------------------------------------------------------------------
   procedure drop_partition(
     i_owner varchar2,
     i_table varchar2,
@@ -855,7 +888,12 @@ as
   end;
 
   ------------------------------------------------------------------------------
-  -- drops given partition
+  -- Drops the given partition.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_partition varchar2]: name of the partition
   ------------------------------------------------------------------------------
   procedure drop_partition(i_owner varchar2, i_table varchar2, i_partition varchar2)
   is
@@ -887,41 +925,175 @@ as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Drops partitions less than the given date.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_date varchar2]: date boundary
+  ------------------------------------------------------------------------------
   procedure drop_partition_lt(i_owner varchar2, i_table varchar2, i_date date)
   is
   begin
     drop_partition(i_owner, i_table, i_date,'<');
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Drops partitions less than or equal to the given date.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_date varchar2]: date boundary
+  ------------------------------------------------------------------------------
   procedure drop_partition_lte(i_owner varchar2, i_table varchar2, i_date date)
   is
   begin
     drop_partition(i_owner, i_table, i_date,'<=');
   end;
 
+
+
+  ------------------------------------------------------------------------------
+  -- Drops partitions greater than the given date.
+  --
+  -- Args:
+  --    [i_owner varchar2): Schema of the table
+  --    [i_table varchar2): Name of the table
+  --    [i_date varchar2): date boundary
+  ------------------------------------------------------------------------------
   procedure drop_partition_gt(i_owner varchar2, i_table varchar2, i_date date)
   is
   begin
     drop_partition(i_owner, i_table, i_date,'>');
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Drops partitions greater than or equal to the given date.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_date varchar2]: date boundar
+  ------------------------------------------------------------------------------
   procedure drop_partition_gte(i_owner varchar2, i_table varchar2,i_date date)
   is
   begin
     drop_partition(i_owner, i_table, i_date,'>=');
   end;
 
+
   procedure drop_partition_btw(i_owner varchar2, i_table varchar2, i_start_date date, i_end_date date)
   is
   begin
     NULL;
-    -- implement body
+    --! implement body
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- Drops the given index. Raises exception on failure if i_silent is true.
+  --
+  -- Args:
+  --    [i_owner varchar2]: index owner
+  --    [i_name varchar2]: index name
+  --    [i_silent boolean = true]: if true raise exception on failure
+  ------------------------------------------------------------------------------
+  procedure drop_index(i_owner varchar2, i_name varchar2, i_silent boolean default true) is
+  begin
+    gv_sql := 'drop index '||i_owner||'.'||i_name;
+    execute immediate gv_sql;
+    logger.success('Index dropped: '||i_name, gv_sql);
+  exception
+    when others then
+      if i_silent != true then raise; end if;
+      logger.error('Failed to drop index: '||i_name, gv_sql);
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- Drops all indexes of the table. Raises exception on failure if i_silent is true.
+  --
+  -- Args:
+  --    [i_table varchar2]: full table name eg. `owner.table_name`
+  --    [i_silent boolean = true]: if true raise exception on failure
+  ------------------------------------------------------------------------------
+  procedure drop_indexes(i_table varchar2, i_silent boolean default true) is
+    v_table_owner varchar2(128);
+    v_table_name  varchar2(128);
+    v_tokens dbms_sql.varchar2_table;
+  begin
+    v_tokens := split(i_table, '.');
+    v_table_owner := v_tokens(1);
+    v_table_name := v_tokens(2);
+    drop_indexes(v_table_owner, v_table_name, i_silent);
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- Returs create index scripts for the given table
+  --
+  -- Args:
+  --    [i_table varchar2]: full table name eg. `owner.table_name`
+  -- Returns:
+  --    dbms_sql.varchar2_table: list of index create scripts
+  ------------------------------------------------------------------------------
+  function index_ddls(i_table varchar2)  return dbms_sql.varchar2_table is
+    v_table_owner varchar2(128);
+    v_table_name  varchar2(128);
+    v_tokens dbms_sql.varchar2_table;
+  begin
+    v_tokens := split(i_table, '.');
+    v_table_owner := v_tokens(1);
+    v_table_name := v_tokens(2);
+    return index_ddls(v_table_owner, v_table_name);
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- Drops all indexes of the table. Raises exception on failure if i_silent is true.
+  --
+  -- Args:
+  --    [i_owner varchar2]: schema of the table
+  --    [i_table varchar2]: name of the table
+  --    [i_silent boolean = true]: if true raise exception on failure
+  ------------------------------------------------------------------------------
+  procedure drop_indexes(i_owner varchar2, i_table varchar2, i_silent boolean default true)
+  is
+  begin
+    for c in (select owner, index_name from all_indexes where upper(table_owner) = i_owner and table_name = i_table) loop
+      drop_index(c.owner, c.index_name, i_silent);
+    end loop;
+  end;
+
+
+  ------------------------------------------------------------------------------
+  -- Returs create index scripts for the given table
+  --
+  -- Args:
+  --    [i_owner varchar2]: schema of the table
+  --    [i_table varchar2]: name of the table
+  -- Returns:
+  --    dbms_sql.varchar2_table: list of index create scripts
+  ------------------------------------------------------------------------------
+  function index_ddls(i_owner varchar2, i_table varchar2) return dbms_sql.varchar2_table is
+    v_index_ddl dbms_sql.varchar2_table;
+    v_index_no number := 1;
+  begin
+    for c in (select owner, index_name from all_indexes where table_owner = i_owner and table_name = i_table) loop
+      v_index_ddl(v_index_no) := dbms_metadata.get_ddl('INDEX',c.index_name, c.owner);
+      v_index_no := v_index_no + 1;
+    end loop;
+
+    return v_index_ddl;
   end;
 
   ------------------------------------------------------------------------------
   -- drops all partitions that are <= piv_max_date
   ------------------------------------------------------------------------------
-
   procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date)
   is
     v_part long := find_max_partition(i_owner, i_table);
@@ -945,12 +1117,12 @@ as
       v_max_date := case v_range_type
         when 'D' then v_max_date + 1
         when 'd' then v_max_date + 1
-        when 'm' then add_months(v_max_date,1)
+        when 'm' then add_months(v_max_date,0)
         when 'y' then add_months(v_max_date,12)
       end;
-      add_partition(i_owner, i_table);
-
       exit when v_max_date > i_date;
+
+      add_partition(i_owner, i_table);
     end loop;
 
   exception
@@ -960,6 +1132,14 @@ as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Adds a single partition to the given table with the date given by the 'i_date' parameter.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_date date]: the date partition will be created for
+  ------------------------------------------------------------------------------
   procedure add_partition(i_owner varchar2, i_table varchar2)
   is
     v_high_value long;
@@ -1008,6 +1188,17 @@ as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Manages partitions for the given table by fitting the partitions to the given date with i_date parameter
+  -- and given number by i_number_size parameter. Basically it adds partitions until i_date and drops partitions
+  -- older than i_window_size * (year|month|day)
+  --
+  -- Args:
+  --   [i_owner varchar2]: Schema of the table
+  --   [i_table varchar2]: Name of the table
+  --   [i_date varchar2]: date boundary
+  --   [i_window_size number]: number of partitions to keep
+  ------------------------------------------------------------------------------
   procedure window_partitions(i_owner varchar2, i_table varchar2, i_date date, i_window_size number)
   is
     v_range_type char(2) := find_partition_range_type(i_owner, i_table);
@@ -1028,8 +1219,8 @@ as
       raise value_error;
     end if;
 
-    v_owner := v_tokens(0);
-    v_table := v_tokens(1);
+    v_owner := v_tokens(1);
+    v_table := v_tokens(2);
     dbms_stats.gather_table_stats(
       v_owner,
       v_table,
@@ -1037,12 +1228,30 @@ as
       cascaDE  => true);
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Gather table/partition statistics
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_part_name varchar2 = null]: Name of the partition defaults to `null`
+  ------------------------------------------------------------------------------
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null)
   is
   begin
     dbms_stats.gather_table_stats (i_owner,i_table,i_part_name);
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Enable/Disable constraints for the given table.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_order varchar2 = 'enable']: DISABLE|ENABLE
+  ------------------------------------------------------------------------------
   procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE')
   is
   begin
@@ -1060,6 +1269,14 @@ as
       raise;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Enable constraints for the given table.s
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  ------------------------------------------------------------------------------
   procedure enable_constraints(i_owner varchar2, i_table varchar2)
   is
   begin
@@ -1070,6 +1287,13 @@ as
       raise;
   end;
 
+  ------------------------------------------------------------------------------
+  -- Disable constraints for the given table.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  ------------------------------------------------------------------------------
   procedure disable_constraints(i_owner varchar2, i_table varchar2)
   is
   begin
@@ -1080,6 +1304,15 @@ as
       raise;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Drop constrant of the table
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_constraint varchar2]: Name of the constraint
+  ------------------------------------------------------------------------------
   procedure drop_constraint(i_owner varchar2, i_table varchar2, i_constraint varchar2)
   is
   begin
@@ -1091,6 +1324,16 @@ as
       raise;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Add unique constraint to the table for the selected columns
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_col_list varchar2]: Comma separated column list
+  --    [i_constraint varchar2]: Name of the constraint
+  ------------------------------------------------------------------------------
   procedure add_unique_constraint(i_owner varchar2, i_table varchar2, i_col_list varchar2, i_constraint varchar2)
   is
   begin
@@ -1106,13 +1349,25 @@ as
   end;
 
 
+  -- Unlock table statistics
+  --
   procedure unlock_table_stats(i_owner varchar2, i_table varchar2)
   is
   begin
-    DBMS_STATS.UNLOCK_TABLE_STATS(upper(i_owner),upper(i_table));
+    dbms_stats.unlock_table_stats(upper(i_owner),upper(i_table));
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Unusable/Rebuild indexes for the given table.
+  --
+  -- Args:
+  --  [i_owner varchar2]: Schema of the table
+  --  [i_table varchar2]: Name of the table
+  --  [i_order varchar2 = 'enable']: DISABLE|ENABLE
+  --    DISABLE makes the indexes unusable
+  --    ENABLE rebuilds the indexes
+  ------------------------------------------------------------------------------
   procedure manage_indexes(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE')
   is
   begin
@@ -1129,6 +1384,14 @@ as
       raise;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Rebuild indexes for the given table.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  ------------------------------------------------------------------------------
   procedure enable_indexes(i_owner varchar2, i_table varchar2)
   is
   begin
@@ -1139,6 +1402,14 @@ as
       raise;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Disable indexes for the given table.
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  ------------------------------------------------------------------------------
   procedure disable_indexes(i_owner varchar2, i_table varchar2)
   is
   begin
@@ -1150,6 +1421,16 @@ as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Exchanges partition of table_1 with the table_2
+  --
+  -- Args:
+  --    [i_owner varchar2]: Schema of the table
+  --    [i_table varchar2]: Name of the table
+  --    [i_part_name varchar2]: partitions to be exchanged
+  --    [i_table_2 varchar2]: table to replace partition
+  --    [pib_validate boolean =false]: validate partition after exchange
+  ------------------------------------------------------------------------------
   procedure exchange_partition(
     i_owner     varchar2,
     i_table_1   varchar2,
@@ -1194,6 +1475,13 @@ as
   end;
 
 
+  ------------------------------------------------------------------------------
+  -- Execute given statement asynchronously.
+  --
+  -- Args:
+  --    [i_sql varchar2]: Statement to execute
+  --    [i_name varchar2 = 'ASYNC_EXEC']: Name of the dbms job entry
+  ------------------------------------------------------------------------------
   procedure async_exec(i_sql varchar2, i_name varchar2 default 'ASYNC_EXEC')
   is
   begin
@@ -1207,7 +1495,10 @@ as
     );
   end;
 
-  -- metadata
+
+  ------------------------------------------------------------------------------
+  -- Get the ddl of the given local object
+  ------------------------------------------------------------------------------
   function ddl_local(i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
     v_result clob := '';
@@ -1223,6 +1514,10 @@ as
     return v_result;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Get the ddl of the given remote object using dblink
+  ------------------------------------------------------------------------------
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
     v_result clob;
@@ -1265,6 +1560,17 @@ as
 
   end;
 
+  ------------------------------------------------------------------------------
+  -- Retrieve metadata of the object(s). If only name is given returns all matching objects'' metadata
+  --
+  -- Args:
+  --    [i_name varchar2]: name of the object
+  --    [i_schema varchar2]: owner of the object
+  --    [i_dblk varchar2]: db-link for remote objects
+  --    [i_type varchar2 ='TABLE']: object type
+  -- Returns
+  --    boolean: true if param exists false otherwise
+  ------------------------------------------------------------------------------
   function ddl(i_name varchar2, i_schema varchar2 default null, i_dblk varchar2 default null, i_type varchar2 default 'TABLE') return clob
   is
     v_result clob := '';
@@ -1306,7 +1612,10 @@ as
 
   end;
 
+
+  ------------------------------------------------------------------------------
   -- simple append carriage-return method
+  ------------------------------------------------------------------------------
   function cr(i_str clob, i_cnt integer) return clob
   is
     v_str clob := i_str;
@@ -1323,6 +1632,15 @@ as
     null;
   end;
 
+
+  ------------------------------------------------------------------------------
+  -- Test given string is a valid email address
+  --
+  -- Args:
+  --   [i_email varchar2]: given email address
+  -- Returns:
+  --   boolean: true if input is a valid email address
+  ------------------------------------------------------------------------------
   function is_email(i_email varchar2) return boolean
   is
     v_result number;

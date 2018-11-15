@@ -40,6 +40,11 @@
   END;
 ```
 
+You can see the recent logs in `logs` table
+```sql
+select * from util.logs order by 3 desc;
+```
+
 ### INSTALLATION
 
   You can put the objects under any schema you like, but you can create a utility

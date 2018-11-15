@@ -17,8 +17,13 @@ as
 
 
   procedure exec(i_sql varchar2, i_silent boolean default false);
-
+  procedure exec(i_sql dbms_sql.varchar2_table, i_silent boolean default false);
   procedure exec_silent(i_sql varchar2);
+
+  function index_ddls(i_owner varchar2, i_table varchar2) return dbms_sql.varchar2_table;
+  function index_ddls(i_table varchar2)  return dbms_sql.varchar2_table;
+  procedure drop_indexes(i_owner varchar2, i_table varchar2, i_silent boolean default true);
+  procedure drop_indexes(i_table varchar2, i_silent boolean default true);
 
   procedure send_mail(
     i_from      varchar2,
@@ -29,19 +34,6 @@ as
     i_async     boolean default true
   );
 
-  procedure send_mail (
-    i_from varchar2,
-    i_to varchar2,
-    i_cc varchar2 default '',
-    i_subject varchar2,
-    i_body varchar2,
-    i_attachments attachments default null,
-    i_host varchar2,
-    i_port number default 25,
-    i_username varchar2 default null,
-    i_password varchar2 default null,
-    i_content_type varchar2 default 'text/plain'
-  );
 
   procedure sleep(P in number)
     as language java name 'java.lang.Thread.sleep(long)';
