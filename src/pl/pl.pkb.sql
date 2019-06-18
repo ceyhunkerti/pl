@@ -40,6 +40,7 @@ as
   procedure exec(i_sql varchar2, i_silent boolean default false) is
   begin
     execute immediate i_sql;
+    logger.success(i_sql);
   exception when others then
     logger.error(SQLERRM, i_sql);
     if i_silent != true then raise; end if;
@@ -111,22 +112,17 @@ as
   ) is
     v_sql varchar2(4000);
   begin
-    if i_async = false then
+    v_sql := '
       UTL_MAIL.send (
-        sender     => i_from,
-        recipients => i_to,
-        subject    => i_subject,
-        MESSAGE    => i_message,
-        MIME_TYPE  => i_mime_type);
+        sender     => '''|| i_from      || ''',
+        recipients => '''|| i_to        || ''',
+        subject    => '''|| i_subject   || ''',
+        MESSAGE    => '''|| i_message   || ''',
+        MIME_TYPE  => '''|| i_mime_type || ''');
+    ';
+    if i_async = false then
+      execute immediate v_sql;
     else
-      v_sql := '
-        UTL_MAIL.send (
-          sender     => '''|| i_from      || ''',
-          recipients => '''|| i_to        || ''',
-          subject    => '''|| i_subject   || ''',
-          MESSAGE    => '''|| i_message   || ''',
-          MIME_TYPE  => '''|| i_mime_type || ''');
-      ';
       pl.async_exec(v_sql, 'send_mail');
     end if;
   end;
@@ -1091,6 +1087,30 @@ as
     return v_index_ddl;
   end;
 
+
+  function constraint_ddls(i_owner varchar2, i_table varchar2) return dbms_sql.varchar2_table is
+    v_cons_ddl dbms_sql.varchar2_table;
+    v_cons_no number := 1;
+  begin
+    for c in (select owner, constraint_name, r_owner from all_constraints where owner = i_owner and table_name = i_table) loop
+      if c.r_owner is not null then
+        v_cons_ddl(v_cons_no) := dbms_metadata.get_ddl('REF_CONSTRAINT',c.constraint_name, c.owner);
+      else
+        v_cons_ddl(v_cons_no) := dbms_metadata.get_ddl('CONSTRAINT',c.constraint_name, c.owner);
+      end if;
+      v_cons_no := v_cons_no + 1;
+    end loop;
+
+    return v_cons_ddl;
+  end;
+
+  procedure drop_constraints(i_owner varchar2, i_table varchar2, i_silent boolean := true) is
+  begin
+    for c in (select owner, table_name, constraint_name from all_constraints where upper(owner) = i_owner and table_name = i_table) loop
+      drop_constraint(c.owner, c.table_name, c.constraint_name, i_silent);
+    end loop;
+  end;
+
   ------------------------------------------------------------------------------
   -- drops all partitions that are <= piv_max_date
   ------------------------------------------------------------------------------
@@ -1117,7 +1137,7 @@ as
       v_max_date := case v_range_type
         when 'D' then v_max_date + 1
         when 'd' then v_max_date + 1
-        when 'm' then add_months(v_max_date,0)
+        when 'm' then add_months(v_max_date,1)
         when 'y' then add_months(v_max_date,12)
       end;
       exit when v_max_date > i_date;
@@ -1252,13 +1272,15 @@ as
   --    [i_table varchar2]: Name of the table
   --    [i_order varchar2 = 'enable']: DISABLE|ENABLE
   ------------------------------------------------------------------------------
-  procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE')
+  procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 := 'ENABLE', i_validate number := 0)
   is
   begin
 
-    for c in (select owner, constraint_name from dba_constraints where owner = upper(i_owner) and table_name = upper(i_table) )
+    for c in (select owner, constraint_name from all_constraints where owner = upper(i_owner) and table_name = upper(i_table) )
     loop
-      gv_sql :=  'alter table '||i_owner||'.'||i_table||' '|| i_order ||' constraint ' ||c.constraint_name;
+      gv_sql :=  'alter table '||i_owner||'.'||i_table||' '|| i_order ||
+        case i_validate when 0 then '' else 'novalidate' end ||' constraint ' ||c.constraint_name;
+
       execute immediate gv_sql;
       pl.logger.success('Manage constraint', gv_sql);
     end loop;
@@ -1277,10 +1299,10 @@ as
   --    [i_owner varchar2]: Schema of the table
   --    [i_table varchar2]: Name of the table
   ------------------------------------------------------------------------------
-  procedure enable_constraints(i_owner varchar2, i_table varchar2)
+  procedure enable_constraints(i_owner varchar2, i_table varchar2, i_validate number := 0)
   is
   begin
-    manage_constraints(i_owner, i_table);
+    manage_constraints(i_owner, i_table, 'EANBLE', i_validate);
   exception
     when others then
       pl.logger.error(SQLERRM, gv_sql);
@@ -1313,7 +1335,7 @@ as
   --    [i_table varchar2]: Name of the table
   --    [i_constraint varchar2]: Name of the constraint
   ------------------------------------------------------------------------------
-  procedure drop_constraint(i_owner varchar2, i_table varchar2, i_constraint varchar2)
+  procedure drop_constraint(i_owner varchar2, i_table varchar2, i_constraint varchar2, i_silent boolean := true)
   is
   begin
     gv_sql :=  'alter table ' ||i_owner||'.'||i_table|| ' drop constraint ' ||i_constraint;
@@ -1321,7 +1343,7 @@ as
   exception
     when others then
       pl.logger.error(SQLERRM, gv_sql);
-      raise;
+      if i_silent = false then raise; end if;
   end;
 
 
@@ -1372,7 +1394,7 @@ as
   is
   begin
 
-    for c in (select owner, index_name from dba_indexes where table_owner = upper(i_owner) and table_name = upper(i_table))
+    for c in (select owner, index_name from all_indexes where table_owner = upper(i_owner) and table_name = upper(i_table))
     loop
       gv_sql := 'alter index '|| c.owner||'.'||c.index_name||' '||case lower(i_order) when 'disable' then 'unusable' else 'rebuild' end;
       execute immediate gv_sql;
@@ -1507,7 +1529,7 @@ as
       return dbms_metadata.get_ddl(i_type, i_name ,i_schema);
     end if;
 
-    for c in (select owner, object_type, object_name from dba_objects where object_name = upper(i_name)) loop
+    for c in (select owner, object_type, object_name from all_objects where object_name = upper(i_name)) loop
       v_result := v_result || cr(dbms_metadata.get_ddl(c.object_type, c.object_name ,c.owner),4);
     end loop;
 
@@ -1567,7 +1589,7 @@ as
   --    [i_name varchar2]: name of the object
   --    [i_schema varchar2]: owner of the object
   --    [i_dblk varchar2]: db-link for remote objects
-  --    [i_type varchar2 ='TABLE']: object type
+  --    [i_type varchar2 = 'TABLE']: object type
   -- Returns
   --    boolean: true if param exists false otherwise
   ------------------------------------------------------------------------------
@@ -1598,7 +1620,7 @@ as
         b.object_name object_name, b.object_type object_type
       from
         v$locked_object a,
-        dba_objects b,
+        all_objects b,
         v$session s
       where xidsqn != 0 and b.object_id = a.object_id and s.sid = session_id
     ) loop

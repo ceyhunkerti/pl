@@ -11,7 +11,6 @@
     end_date    date,
     message     varchar2(4000),
     statement   clob
-  ) parallel nologging compress
-  ;
+  ) parallel nologging compress;
 
 
