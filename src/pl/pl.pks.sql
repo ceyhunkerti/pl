@@ -11,7 +11,13 @@ as
   type attachments is table of attachment;
   type varchar2_table is table of varchar2(4000);
 
-  function make_string(i_data varchar2_table, i_delimiter varchar2 default ',') return varchar2;
+  function make_string(
+    i_data varchar2_table,
+    i_delimiter varchar2 default ',') return varchar2;
+
+  function make_string(
+    i_data dbms_sql.varchar2_table,
+    i_delimiter varchar2 default ',') return long;
 
 
   procedure exec(i_sql varchar2, i_silent boolean default false);
@@ -22,10 +28,6 @@ as
   function index_ddls(i_table varchar2)  return dbms_sql.varchar2_table;
   procedure drop_indexes(i_owner varchar2, i_table varchar2, i_silent boolean default true);
   procedure drop_indexes(i_table varchar2, i_silent boolean default true);
-
-  function constraint_ddls(i_owner varchar2, i_table varchar2) return dbms_sql.varchar2_table;
-  procedure drop_constraints(i_owner varchar2, i_table varchar2, i_silent boolean := true);
-
 
   procedure send_mail(
     i_from      varchar2,
@@ -54,7 +56,7 @@ as
   procedure drop_table(i_owner varchar2, i_table varchar2, i_ignore_err boolean default true);
   procedure gather_table_stats(i_table varchar2, i_part_name varchar2 default null);
   procedure gather_table_stats(i_owner varchar2, i_table varchar2, i_part_name varchar2 default null);
-  procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 := 'ENABLE', i_validate number := 0);
+  procedure manage_constraints(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE', i_validate number := 0);
   procedure enable_constraints(i_owner varchar2, i_table varchar2, i_validate number := 0);
   procedure disable_constraints(i_owner varchar2, i_table varchar2);
   procedure manage_indexes(i_owner varchar2, i_table varchar2, i_order varchar2 default 'ENABLE');

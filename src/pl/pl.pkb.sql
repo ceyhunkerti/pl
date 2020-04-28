@@ -96,6 +96,28 @@ as
 
 
   ----------------------------------------------------------------------------------------------
+  -- make string from list of strings
+  --
+  -- Args:
+  --    [i_sql varchar2_table]: list of strings
+  --    [i_delimiter varchar2 = ','] delimiter
+  ----------------------------------------------------------------------------------------------
+  function make_string(i_data dbms_sql.varchar2_table, i_delimiter varchar2 default ',' ) return long
+  is
+    v_string long;
+  begin
+    for i in i_data.first .. i_data.last loop
+      if i != i_data.first then
+        v_string := v_string || i_delimiter;
+      end if;
+      v_string := v_string || i_data(i);
+    end loop;
+    return v_string;
+  end;
+
+
+
+  ----------------------------------------------------------------------------------------------
   -- Send mail to given recipients. Set mail server settings on `params` before
   -- using this method!
   -- Args:
@@ -137,7 +159,7 @@ as
   function parse_date (i_str varchar2) return date
   as
     v_result date;
-    function try_parse_date (i_str in varchar2,i_date_format in varchar2 default null) return date
+    function try_parse_date (i_str in varchar2, i_date_format in varchar2 default null) return date
     as
       v_result date;
     begin
@@ -157,7 +179,9 @@ as
 
     -- note: Oracle handles separator characters (comma, dash, slash) interchangeably,
     --       so we don't need to duplicate the various format masks with different separators (slash, hyphen)
-    v_result := try_parse_date (i_str, 'DD.MM.RRRR HH24:MI:SS');
+
+    v_result := try_parse_date (i_str, 'YYYYMM');
+    v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MM.RRRR HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'DD.MM HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'DDMMYYYY HH24:MI:SS'));
     v_result := coalesce(v_result, try_parse_date (i_str, 'YYYYMMDD HH24:MI:SS'));
