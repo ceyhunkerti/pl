@@ -68,7 +68,7 @@ as
   procedure add_unique_constraint(i_owner varchar2, i_table varchar2, i_col_list varchar2, i_constraint varchar2);
 
   -- partition management
-  procedure add_partitions(i_owner varchar2, i_table varchar2,i_date date);
+  procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date := sysdate);
   procedure add_partition (i_owner varchar2, i_table varchar2);
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_partition varchar2);
   procedure truncate_partition(i_owner varchar2, i_table varchar2, i_date date);

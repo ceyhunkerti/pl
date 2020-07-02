@@ -1138,7 +1138,7 @@ as
   ------------------------------------------------------------------------------
   -- drops all partitions that are <= piv_max_date
   ------------------------------------------------------------------------------
-  procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date)
+  procedure add_partitions(i_owner varchar2, i_table varchar2, i_date date := sysdate)
   is
     v_part long := find_max_partition(i_owner, i_table);
     v_part_name   varchar2(50);
