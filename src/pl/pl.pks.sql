@@ -2,13 +2,7 @@ CREATE OR REPLACE package UTIL.pl authid current_user
 as
   logger logtype := logtype.init('anonymous');
 
-  type attachment IS RECORD (
-    name varchar2(1000),
-    data_type varchar2(100) default 'text/plain',
-    content clob default ''
-  );
 
-  type attachments is table of attachment;
   type varchar2_table is table of varchar2(4000);
 
   function make_string(
