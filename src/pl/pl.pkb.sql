@@ -30,6 +30,16 @@ as
   function ddl_remote(i_dblk varchar2, i_name varchar2, i_schema varchar2 default null, i_type varchar2 default 'TABLE') return clob;
 
 
+  function format(i_base long, i_values strings) return long is
+    v_result long := i_base;
+  begin
+    for i in 1..i_values.count loop
+      v_result := regexp_replace(v_result, '{}', i_values(i),1,1);
+    end loop;
+    return v_result;
+  end;
+
+
   ----------------------------------------------------------------------------------------------
   -- execute given statement, raise exception if i_silent is set to false
   --

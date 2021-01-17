@@ -5,6 +5,8 @@ as
 
   type varchar2_table is table of varchar2(4000);
 
+  function format(i_base long, i_values strings) return long;
+
   function make_string(
     i_data varchar2_table,
     i_delimiter varchar2 default ',') return varchar2;

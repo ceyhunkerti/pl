@@ -13,4 +13,5 @@
     statement   clob
   ) parallel nologging compress;
 
+  create or replace type util.strings is table of varchar2(4000);
 
