@@ -15,3 +15,4 @@
 
   create or replace type util.strings is table of varchar2(4000);
 
+  create public synonym s for util.strings;
